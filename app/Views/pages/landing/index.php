@@ -132,7 +132,30 @@
                             <h5><i class="fas fa-list"></i> Filter Data</h5>
                         </div>
                         <div class="card-body">
-                            
+                            <form id="filterForm">
+                                <div class="form-group">
+                                    <label for="jenisFasilitas">Jenis Fasilitas Jalan</label>
+                                    <select name="jenisFasilitas" id="jenisFasilitas" class="form-control">
+                                        <option value="">Semua jenis fasilitas</option>
+                                        <option value="rambu">Rambu</option>
+                                        <option value="marka">Marka</option>
+                                        <option value="guradrail">Guradrail</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="kondisi">Kondisi</label>
+                                    <select name="jenisFasilitas" id="jenisFasilitas" class="form-control">
+                                        <option value="">Semua Kondisi</option>
+                                        <option value="baik">Baik</option>
+                                        <option value="sedang">Rusak Sedang</option>
+                                        <option value="berat">Rusak Berat</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="location">Lokasi</label>
+                                    <input type="text" class="form-control" id="location" name="location" required>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
