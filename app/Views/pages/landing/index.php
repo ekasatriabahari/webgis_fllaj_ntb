@@ -34,6 +34,12 @@
 <link rel="text/css" href="<?= base_url('assets/template') ?>/fontawesome/css/all.min.css">
 <script src="<?= base_url('assets/template') ?>/fontawesome/js/all.min.js"></script>
 
+<!-- Highcharts -->
+<script src="<?= base_url('assets/template') ?>/highcharts/highcharts.js"></script>
+
+<!-- Datatables -->
+<link rel="text/css" href="<?= base_url('assets/template') ?>/datatables/datatables.min.css">
+<script src="<?= base_url('assets/template') ?>/datatables/datatables.min.js"></script>
 </head>
 
 <body>
@@ -88,6 +94,60 @@
 
         section {
             width: 100%;
+        }
+
+        /* PERBAIKAN: CSS untuk mengatasi tumpang tindih */
+        main {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        section.bg-soft {
+            flex: 1;
+            padding-bottom: 2rem;
+        }
+
+        footer {
+            margin-top: auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Perbaikan untuk DataTables */
+        .dataTables_wrapper {
+            position: relative;
+            clear: both;
+            margin-bottom: 2rem;
+        }
+
+        .dataTables_length,
+        .dataTables_filter {
+            margin-bottom: 1rem;
+        }
+
+        .dataTables_info {
+            padding-top: 1rem;
+        }
+
+        .dataTables_paginate {
+            padding-top: 1rem;
+        }
+
+        /* Pastikan card tabel memiliki margin bottom yang cukup */
+        .card.mt-3.mb-5 {
+            margin-bottom: 3rem !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            section.bg-soft {
+                padding-bottom: 3rem;
+            }
+            
+            .card.mt-3.mb-5 {
+                margin-bottom: 2rem !important;
+            }
         }
     </style>
     <main>
@@ -152,10 +212,34 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="location">Lokasi</label>
-                                    <input type="text" class="form-control" id="location" name="location" required>
+                                    <label for="tahun">Tahun Survey</label>
+                                    <select name="tahun" id="tahun" class="form-control">
+                                        <option value="2025" selected>2025</option>
+                                        <option value="2026">2026</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5><i class="fa-solid fa-chart-pie"></i> Presentase Kondisi Fasilitas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div>
+                                <div class="form-group">
+                                    <label for="chartFasilitas">Jenis Fasilitas</label>
+                                    <select name="chartFasilitas" id="chartFasilitas" class="form-control">
+                                        <option value="rambu" selected>Rambu</option>
+                                        <option value="marka">Marka</option>
+                                        <option value="guradrail">Guradrail</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3" id="kondisiChartContainer" style="height: 300px; width: 100%;"></div>
                         </div>
                     </div>
                 </div>
@@ -168,9 +252,40 @@
                             <div id="map" style="height: 600px; width: 100%;"></div>
                         </div>
                     </div>
+                    <div class="card mt-3 mb-5">
+                        <div class="card-header">
+                            <h5><i class="fas fa-table"></i> Tabel Fasilitas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tableContainer">
+                                <table id="tableKondisi" class="table table-striped table-bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Kode Fasilitas</th>
+                                            <th>Nama Fasilitas</th>
+                                            <th>Jenis Fasilitas</th>
+                                            <th>Kondisi</th>
+                                            <th>Tahun Survey</th>
+                                            <th>Detail</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                    </div>
                 </div>
             </div>
         </section>
+        <!-- footer -->
+        <footer class="bg-white rounded shadow p-5 mb-4 mt-4 mx-3">
+            <div class="row">
+                <div class="col-12 col-md-4 col-xl-6 mb-4 mb-md-0">
+                    <p class="mb-0 text-center text-lg-start">© <span class="current-year"></span> <span class="text-primary">Made with 💓 by </span> <a class="text-primary fw-normal" href="mailto:ekasatriabahari@outlook.com" target="_blank">Eka Satria Bahari</a></p>
+                </div>
+            </div>
+        </footer>
     </main>
     
     <!-- Leaflet CSS -->
@@ -189,7 +304,180 @@
         height: 100%;
         width: 100%;
     }
+
+    #kondisiChartContainer {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .highcharts-legend-item text {
+        font-size: 14px !important;
+        font-weight: 600;
+    }
+
+    .highcharts-data-label {
+        font-weight: bold !important;
+    }
 </style>
+
+<script>
+    $(document).ready(function() {
+        $('#tableKondisi').DataTable();
+        // var tableKondisi = $('#tableKondisi').DataTable({
+        //     "ajax": {
+        //         "url": "<?= base_url('api/kondisi') ?>",
+        //         "dataSrc": "data"
+        //     },
+        //     "columns": [
+        //         { "data": null, "defaultContent": "" },
+        //         { "data": "kode_rambu" },
+        //         { "data": "nama" },
+        //         { "data": "jenis" },
+        //         { "data": "tahun_survey" },
+        //         {
+        //             "data": null,
+        //             "defaultContent": "<button type='button' class='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#detailModal'>Detail</button>"
+        //         }
+        //     ],
+        //     "columnDefs": [
+        //         {
+        //             "targets": 4,
+        //             "render": function(data, type, row, meta) {
+        //                 return "<a href='#' data-bs-toggle='modal' data-bs-target='#detailModal' data-id='" + row.kode_rambu + "'>" + data + "</a>";
+        //             }
+        //         }
+        //     ]
+        // });
+
+        // $('#tableKondisi').on('draw.dt', function() {
+        //     var data = tableKondisi.rows().data();
+        //     $.each(data, function(index, row) {
+        //         $('#tableKondisi tbody tr:eq(' + index + ') td:first-child').text(index + 1);
+        //     });
+        // });
+    });
+    function initKondisiChart(data) {
+        Highcharts.chart('kondisiChartContainer', {
+            chart: {
+                type: 'pie',
+                backgroundColor: '#f8f9fa',
+                borderRadius: 10
+            },
+            title: {
+                text: 'Kondisi Rambu Lalu Lintas',
+                style: {
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    color: '#333'
+                }
+            },
+            // subtitle: {
+            //     text: 'Data kondisi rambu berdasarkan tingkat kerusakan',
+            //     style: {
+            //         color: '#666'
+            //     }
+            // },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            accessibility: {
+                point: {
+                    valueSuffix: '%'
+                }
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.y}%',
+                        style: {
+                            fontSize: '12px'
+                        }
+                    },
+                    showInLegend: false
+                }
+            },
+            series: [{
+                name: 'Kondisi',
+                colorByPoint: true,
+                data: data
+            }],
+            credits: {
+                enabled: false
+            }
+        });
+    }
+
+// Fungsi AJAX untuk mengambil data dummy
+function loadKondisiData() {
+    $.ajax({
+        url: '/api/kondisi-rambu', // Ganti dengan endpoint API Anda
+        method: 'GET',
+        dataType: 'json',
+        beforeSend: function() {
+            // Tampilkan loading spinner
+            $('#kondisiChartContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+        },
+        success: function(response) {
+            // Jika menggunakan API real
+            // initKondisiChart(response.data);
+            
+            // Untuk demo, gunakan data dummy
+            var dummyData = [
+                {
+                    name: 'Baik',
+                    y: 65,
+                    color: '#28a745'
+                },
+                {
+                    name: 'Sedang',
+                    y: 25,
+                    color: '#ffc107'
+                },
+                {
+                    name: 'Rusak Berat',
+                    y: 10,
+                    color: '#dc3545'
+                }
+            ];
+            initKondisiChart(dummyData);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading data:', error);
+            
+            // Fallback ke data dummy jika API error
+            var fallbackData = [
+                {
+                    name: 'Baik',
+                    y: 60,
+                    color: '#28a745'
+                },
+                {
+                    name: 'Sedang',
+                    y: 30,
+                    color: '#ffc107'
+                },
+                {
+                    name: 'Rusak Berat',
+                    y: 10,
+                    color: '#dc3545'
+                }
+            ];
+            initKondisiChart(fallbackData);
+            
+            // Tampilkan pesan error
+            $('#kondisiChartContainer').append('<div class="alert alert-warning mt-2">Data menggunakan sample karena koneksi terputus</div>');
+        }
+    });
+}
+$(document).ready(function() {
+    loadKondisiData();
+});
+</script>
 <script>
     // Inisialisasi peta dengan view center di NTB
     var map = L.map('map').setView([-8.6529, 117.3616], 9); // Koordinat tengah NTB, zoom level 9
