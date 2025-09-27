@@ -108,7 +108,9 @@
             },
             columns: [
                 { data: null, orderable: false, searchable: false },
-                { data: 'kategori' },
+                { data: null, render: function(data, type, row) {
+                    return `${row.kategori} - <span class="badge rounded-pill bg-primary">${row.kode_fasilitas}</span>`;
+                }},
                 { data: 'jenis'},
                 { data: 'deskripsi' },
                 {

@@ -56,25 +56,53 @@ class JenisFasilitasController extends BaseController
     {
         $data = $this->request->getPost();
         $data['created_at'] = date('Y-m-d H:i:s');
+
+        // Mapping kategori → prefix
+        $prefixMap = [
+            'Rambu'          => 'RMB',
+            'Marka'          => 'MRK',
+            'Pagar Pengaman' => 'PGR',
+            'Penanda Jalan'  => 'PND',
+            'Penerangan'     => 'PNR',
+            'Pemelandai'     => 'PML',
+            'Lainnya'        => 'LNN',
+        ];
+
+        // Tambahkan prefix sesuai kategori yang diposting
+        if (isset($data['kategori']) && isset($prefixMap[$data['kategori']])) {
+            $data['kode_fasilitas'] = $prefixMap[$data['kategori']];
+        } else {
+            // Jika kategori tidak valid, kembalikan error
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
+                'success'   => false,
+                'message'   => 'Kategori tidak dikenal'
+            ], ResponseInterface::HTTP_BAD_REQUEST);
+        }
+
         $jenis_fasilitas = model('JenisFasilitasModel');
         $saved = $jenis_fasilitas->insert($data);
+
         if ($saved) {
             $response = [
-                'status' => 'success',
+                'status'    => 'success',
                 'http_code' => ResponseInterface::HTTP_OK,
-                'success' => true,
-                'message' => 'Data berhasil disimpan',
+                'success'   => true,
+                'message'   => 'Data berhasil disimpan',
             ];
         } else {
             $response = [
-                'status' => 'error',
+                'status'    => 'error',
                 'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
-                'success' => false,
-                'message' => 'Data gagal disimpan',
+                'success'   => false,
+                'message'   => 'Data gagal disimpan',
             ];
         }
+
         return $this->response->setJSON($response, $response['http_code']);
     }
+
 
     public function detail($id)
     {

@@ -6,9 +6,18 @@
 <div class="col-12">
     <div class="card">
         <div class="card-body">
-            <form id="formTambahFasilitas" enctype="multipart/form-data">
+            <form id="formTambahFasilitas">
+                <div class="form-group">
+                    <label for="jenisFasilitas">Kategori Fasilitas *</label>
+                    <select name="kategori_fasilitas" id="kategoriFasilitas" class="form-control" required>
+                        <option value="">Pilih Kategori Fasilitas</option>
+                        <!-- Options akan diisi via AJAX -->
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="jenisFasilitas">Jenis Fasilitas *</label>
+                    <input type="hidden" name="kode_fasilitas" id="kode_fasilitas" />
                     <select name="jenis_fasilitas_id" id="jenisFasilitas" class="form-control" required>
                         <option value="">Pilih Jenis Fasilitas</option>
                         <!-- Options akan diisi via AJAX -->
@@ -72,6 +81,106 @@
         </div>
     </div>
 </div>
+
+<script>
+    $(() => {
+        $.ajax({
+            url: '<?= site_url("api/jenis_fasilitas") ?>',
+            type: 'GET',
+            data: {
+                'columns[1][search][value]': ''
+            },
+            dataType: 'json',
+            success: (response) => {
+                const allData = response.data;
+
+                // --- isi dropdown kategori (unik) ---
+                const kategoriUnik = [...new Set(allData.map(item => item.kategori))];
+                let optKategori = '<option value="">Pilih Kategori Fasilitas</option>';
+                kategoriUnik.forEach(kat => {
+                    optKategori += `<option value="${kat}">${kat}</option>`;
+                });
+                $('#kategoriFasilitas').html(optKategori);
+
+                // --- event ketika kategori dipilih ---
+                $('#kategoriFasilitas').on('change', function () {
+                    const kategori = $(this).val();
+
+                    // filter jenis sesuai kategori
+                    const jenisFiltered = allData.filter(item => item.kategori === kategori);
+
+                    // ✅ set hidden input kode_fasilitas (ambil dari item pertama)
+                    if (jenisFiltered.length > 0) {
+                        $('#kode_fasilitas').val(jenisFiltered[0].kode_fasilitas);
+                    } else {
+                        $('#kode_fasilitas').val('');
+                    }
+
+                    // isi dropdown jenis fasilitas
+                    let optJenis = '<option value="">Pilih Jenis Fasilitas</option>';
+                    jenisFiltered.forEach(j => {
+                        optJenis += `<option value="${j.id}">${j.jenis}</option>`;
+                    });
+                    $('#jenisFasilitas').html(optJenis);
+                });
+            },
+            error: (err) => {
+                console.log(err);
+            }
+        });
+
+
+        // save data
+        $('#formFasilitas').submit((e) => {
+            e.preventDefault();
+            saveData();
+        })
+    });
+
+    function saveData()
+    {
+        var data = $('#formFasilitas').serialize();
+        $.ajax({
+            url: '<?= site_url("api/fasilitas") ?>',
+            type: 'POST',
+            data: data,
+            beforeSend: () => {
+                Swal.fire({
+                    title: 'Please Wait...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message
+                    }).then(() => {
+                        window.location.href = '<?= site_url("fasilitas") ?>';
+                    });
+                }else{
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            },
+            error: (err) => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.responseJSON.message  
+                });
+            }
+        });
+    }
+</script>
 <script>
     // Geolocation API untuk mendapatkan koordinat
     document.getElementById('btnGetLocation').addEventListener('click', function() {

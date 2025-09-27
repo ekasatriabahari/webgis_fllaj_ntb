@@ -22,4 +22,10 @@ $routes->group('api', function ($routes) {
         $routes->put('/', 'JenisFasilitasController::updateData');
         $routes->delete('(:num)', 'JenisFasilitasController::deleteData/$1');
     });
+
+    /* Fasilitas */
+    $routes->group('fasilitas', function ($routes) {
+       $routes->get('/', 'FasilitasController::getAll');
+       $routes->post('/', 'FasilitasController::addData'); 
+    });
 });

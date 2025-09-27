@@ -22,6 +22,10 @@ class CreateJenisFasilitasTable extends Migration
                 'type' => 'VARCHAR',
                 'constraint' => 100,
             ],
+            'kode_fasilitas' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+            ],
             'deskripsi' => [
                 'type' => 'TEXT',
                 'null' => true,
