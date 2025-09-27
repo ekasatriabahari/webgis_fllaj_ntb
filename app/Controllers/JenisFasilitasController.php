@@ -18,49 +18,114 @@ class JenisFasilitasController extends BaseController
     public function getAll()
     {
         $jenis_fasilitas = model('JenisFasilitasModel');
-        $draw = $this->request->getGet('draw');
-        $start = $this->request->getGet('start');
+        $draw   = $this->request->getGet('draw');
+        $start  = $this->request->getGet('start');
         $length = $this->request->getGet('length');
-        
-        // Get filter parameter
-        $filterKategori = $this->request->getGet('filterKategori');
-        
-        // Build query dengan filter
+
+        // Parameter filter dari DataTables
+        $filterKategori = $this->request->getGet('columns')[1]['search']['value'];
+
+        // Total seluruh data (tanpa filter)
+        $totalRecords = $jenis_fasilitas->countAll();
+
+        // Builder untuk data & filter
         $builder = $jenis_fasilitas->builder();
-        
-        // Jika ada filter kategori
+
         if (!empty($filterKategori)) {
             $builder->where('kategori', $filterKategori);
         }
-        
-        // Get total records tanpa filter
-        $totalRecords = $jenis_fasilitas->countAll();
-        
-        // Get filtered data
+
+        // ----- hitung jumlah setelah filter -----
+        // clone builder agar kondisi where tetap sama
+        $filteredBuilder = clone $builder;
+        $filteredRecords = $filteredBuilder->countAllResults();
+
+        // ----- ambil data dengan limit & offset -----
         $builder->limit($length, $start);
         $data = $builder->get()->getResultArray();
-        
-        // Get total filtered records
-        if (!empty($filterKategori)) {
-            $filteredRecords = $jenis_fasilitas->where('kategori', $filterKategori)->countAllResults();
+
+        return $this->response->setJSON([
+            'draw'            => intval($draw),
+            'recordsTotal'    => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data'            => $data
+        ]);
+    }
+
+    public function addData()
+    {
+        $data = $this->request->getPost();
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $jenis_fasilitas = model('JenisFasilitasModel');
+        $saved = $jenis_fasilitas->insert($data);
+        if ($saved) {
+            $response = [
+                'status' => 'success',
+                'http_code' => ResponseInterface::HTTP_OK,
+                'success' => true,
+                'message' => 'Data berhasil disimpan',
+            ];
         } else {
-            $filteredRecords = $totalRecords;
+            $response = [
+                'status' => 'error',
+                'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
+                'success' => false,
+                'message' => 'Data gagal disimpan',
+            ];
         }
-        
-        if ($data) {
-            return $this->response->setJSON([
-                'draw' => intval($draw),
-                'recordsTotal' => $totalRecords,
-                'recordsFiltered' => $filteredRecords,
-                'data' => $data
-            ], 200);
+        return $this->response->setJSON($response, $response['http_code']);
+    }
+
+    public function detail($id)
+    {
+        $jenis_fasilitas = model('JenisFasilitasModel');
+        $data = $jenis_fasilitas->find($id);
+        return $this->response->setJSON($data);
+    }
+
+    public function updateData()
+    {
+        $data = $this->request->getRawInputVar();
+        $data['updated_at'] = date('Y-m-d H:i:s');
+        $jenis_fasilitas = model('JenisFasilitasModel');
+        $updated = $jenis_fasilitas->update($data['id'], $data);
+        if ($updated) {
+            $response = [
+                'status' => 'success',
+                'http_code' => ResponseInterface::HTTP_OK,
+                'success' => true,
+                'message' => 'Data berhasil disimpan',
+            ];
         } else {
-            return $this->response->setJSON([
-                'draw' => intval($draw),
-                'recordsTotal' => 0,
-                'recordsFiltered' => 0,
-                'data' => []
-            ], 200);
-        }          
+            $response = [
+                'status' => 'error',
+                'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
+                'success' => false,
+                'message' => 'Data gagal disimpan',
+            ];
+        }
+        return $this->response->setJSON($response, $response['http_code']);
+    }
+
+    public function deleteData($id)
+    {
+        $jenis_fasilitas = model('JenisFasilitasModel');
+        $deleted = $jenis_fasilitas->delete($id);
+        if ($deleted) {
+            $response = [
+                'status' => 'success',
+                'http_code' => ResponseInterface::HTTP_OK,
+                'success' => true,
+                'message' => 'Data berhasil dihapus',
+            ];
+        } else {
+            $response = [
+                'status' => 'error',
+                'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
+                'success' => false,
+                'message' => 'Data gagal dihapus',
+            ];
+        }
+        return $this->response->setJSON($response, $response['http_code']);
     }
 }

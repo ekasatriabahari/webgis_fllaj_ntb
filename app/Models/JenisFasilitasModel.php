@@ -12,7 +12,7 @@ class JenisFasilitasModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['kategori', 'jenis', 'deskripsi', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['id', 'kategori', 'jenis', 'deskripsi', 'created_at', 'updated_at'];
 
     protected bool $allowEmptyInserts = false;
 

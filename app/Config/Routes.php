@@ -17,5 +17,9 @@ $routes->group('api', function ($routes) {
     /* Jenis Fasilitas */
     $routes->group('jenis_fasilitas', function ($routes) {
         $routes->get('/', 'JenisFasilitasController::getAll');
+        $routes->post('/', 'JenisFasilitasController::addData');
+        $routes->get('(:num)', 'JenisFasilitasController::detail/$1');
+        $routes->put('/', 'JenisFasilitasController::updateData');
+        $routes->delete('(:num)', 'JenisFasilitasController::deleteData/$1');
     });
 });

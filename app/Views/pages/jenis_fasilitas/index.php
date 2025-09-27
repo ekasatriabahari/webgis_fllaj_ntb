@@ -29,7 +29,7 @@
                         </th>
                         <th>Jenis</th>
                         <th width="35%">Deskripsi</th>
-                        <th width="15%">#</th>
+                        <th width="10%">#</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -50,6 +50,7 @@
                 <form id="formJenisFasilitas">
                     <div class="mb-3">
                         <label for="kategori" class="form-label">Kategori</label>
+                        <input type="hidden" id="id" name="id">
                         <select class="form-select" aria-label="Default select example" name="kategori" id="kategori" required>
                             <option value="Rambu" selected>Rambu</option>
                             <option value="Marka">Marka</option>
@@ -67,7 +68,9 @@
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3" placeholder="Opsional..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">Tambah</button>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -77,20 +80,26 @@
     $(() => {
         getData();
         // Saat dropdown filter status pengajuan berubah
-        $('#statusFilter').on('change', function () {
+        $('#filterKategori').on('change', function () {
             let val = $(this).val();
-            $('#filterKategori').DataTable().column(2).search(val).draw(); // Kolom ke-3 = "Status"
+            $('#tableJenisFasilitas').DataTable().column(1).search(val).draw(); // Array Kolom ke-1 = "Kategori"
+        });
+
+        $('#formJenisFasilitas').submit(function(e) {
+            e.preventDefault();
+            saveData();
         });
     });
 
     function tambahData()
     {
+        $('#jenisFasilitasModal .modal-title').text('Tambah Jenis Fasilitas');
         $('#jenisFasilitasModal').modal('show');
     }
 
     function getData()
     {
-        var table = $('#tableJenisFasilitas').DataTable({
+        $('#tableJenisFasilitas').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
@@ -107,7 +116,8 @@
                     orderable: false,
                     searchable: false,
                     render: function(data, type, row) {
-                        return `<button class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="View Detail" onclick="viewDetail('${row.id}', '${row.modul}')"><i class="fas fa-eye"></i></button>`;
+                        return `<button class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="View Detail" onclick="viewDetail('${row.id}')"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove" onclick="removeData('${row.id}')"><i class="fas fa-trash-alt"></i></button>`;
                     }
                 }
             ],  
@@ -124,9 +134,99 @@
                 $('[data-bs-toggle="tooltip"]').tooltip();
             }
         });
+    }
 
-        $('#filterKategori').on('change', function() {
-            table.ajax.reload();
+    function saveData()
+    {
+        var id = $('#id').val();
+        var method = id ? 'PUT' : 'POST';
+        var data = $('#formJenisFasilitas').serialize();
+        $.ajax({
+            url: '<?= site_url("api/jenis_fasilitas") ?>',
+            type: method,
+            data: data,
+            beforeSend: () => {
+                Swal.fire({
+                    title: 'Please Wait...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: response.message
+                }).then(() => {
+                    $('#jenisFasilitasModal').modal('hide');
+                    $('#formJenisFasilitas')[0].reset();
+                    $('#tableJenisFasilitas').DataTable().destroy();
+                    getData();
+                });
+            },
+            error: (err) => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.responseJSON.message  
+                });
+            }
         });
     }
+
+    function viewDetail($id)
+    {
+        $('#jenisFasilitasModal .modal-title').text('Ubah Jenis Fasilitas');
+        $.ajax({
+            url: '<?= site_url("api/jenis_fasilitas") ?>/'+$id,
+            type: 'GET',
+            success: function(response) {
+                $('#id').val(response.id);
+                $('#kategori').val(response.kategori);
+                $('#jenis').val(response.jenis);
+                $('#deskripsi').val(response.deskripsi);
+                $('#jenisFasilitasModal').modal('show');
+            }
+        });
+    }
+
+    function removeData(id)
+    {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '<?= site_url("api/jenis_fasilitas") ?>/'+id,
+                    type: 'DELETE',
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message
+                        }).then(() => {
+                            $('#tableJenisFasilitas').DataTable().ajax.reload(null, false);
+                        });
+                    },
+                    error: (err) => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: err.responseJSON.message  
+                        });
+                    }
+                });
+            }
+        });
+    }
+
 </script>
