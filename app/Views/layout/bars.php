@@ -13,7 +13,8 @@
                     <li class="nav-item dropdown ms-lg-3">
                         <a class="nav-link dropdown-toggle pt-1 px-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="media d-flex align-items-center">
-                                <img class="avatar rounded-circle" alt="Image placeholder" src="<?= base_url() ?>assets/images/user.png">
+                                <!-- <img class="avatar rounded-circle" alt="Image placeholder" src="<?= base_url() ?>assets/images/user.png"> -->
+                                 <i class="far fa-user-circle text-muted"></i>
                                 <div class="media-body ms-2 text-dark align-items-center d-none d-lg-block">
                                     <span class="mb-0 font-small fw-bold text-gray-900"><?= session('nama') ?></span>
                                 </div>

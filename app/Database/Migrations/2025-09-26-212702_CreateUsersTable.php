@@ -2,7 +2,7 @@
 
 use CodeIgniter\Database\Migration;
 
-class CreateSurveyLogsTable extends Migration
+class CreateUsersTable extends Migration
 {
     public function up()
     {
@@ -13,39 +13,54 @@ class CreateSurveyLogsTable extends Migration
                 'unsigned' => true,
                 'auto_increment' => true,
             ],
-            'fasilitas_id' => [
-                'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
+            'nama' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
             ],
-            'user_id' => [
-                'type' => 'INT',
-                'constraint' => 11,
-                'unsigned' => true,
+            'email' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'unique' => true,
             ],
-            'action' => [
+            'username' => [
+                'type' => 'VARCHAR',
+                'constraint' => 100,
+                'unique' => true,
+            ],
+            'password' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+            ],
+            'role' => [
                 'type' => 'ENUM',
-                'constraint' => ['create', 'update', 'delete'],
+                'constraint' => ['admin', 'surveyor', 'viewer'],
+                'default' => 'surveyor',
             ],
-            'changes' => [
-                'type' => 'JSON',
+            'is_active' => [
+                'type' => 'TINYINT',
+                'constraint' => 1,
+                'default' => 1,
+            ],
+            'last_login' => [
+                'type' => 'DATETIME',
                 'null' => true,
             ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
             ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addKey(['fasilitas_id', 'user_id']);
-        $this->forge->addForeignKey('fasilitas_id', 'fasilitas', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('survey_logs');
+        $this->forge->createTable('users');
     }
 
     public function down()
     {
-        $this->forge->dropTable('survey_logs');
+        $this->forge->dropTable('users');
     }
 }

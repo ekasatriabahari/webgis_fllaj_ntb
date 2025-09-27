@@ -398,7 +398,7 @@
                             fontSize: '12px'
                         }
                     },
-                    showInLegend: false
+                    showInLegend: true
                 }
             },
             series: [{

@@ -33,6 +33,7 @@ class JenisFasilitasSeeder extends Seeder
             
             // PENERANGAN JALAN
             ['kategori' => 'Penerangan', 'jenis' => 'Lampu PJU'],
+            ['kategori' => 'Penerangan', 'jenis' => 'Lampu PJU Tenaga Surya'],
             ['kategori' => 'Penerangan', 'jenis' => 'Lampu Traffic Light'],
             
             // PEMELANDAI JALAN

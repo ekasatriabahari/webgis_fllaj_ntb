@@ -3,7 +3,7 @@
     <footer class="bg-white rounded shadow p-5 mb-4 mt-4">
         <div class="row">
             <div class="col-12 col-md-4 col-xl-6 mb-4 mb-md-0">
-                <p class="mb-0 text-center text-lg-start">© <span class="current-year"></span> <span class="text-primary">Made with 💓 by </span> <a class="text-primary fw-normal" href="mailto:ekasatriabahari@outlook.com" target="_blank">Eka Satria Bahari</a></p>
+                <p class="mb-0 text-center text-lg-start">© <span class="current-year"></span> <span class="text-primary">Dinas Perhubungan Provinsi NTB -  <a class="text-primary fw-normal" href="mailto:armudipradanakonsultan@yahoo.com" target="_blank">PT. Armudi Pradana Konsultan</a></span></p>
             </div>
         </div>
     </footer>

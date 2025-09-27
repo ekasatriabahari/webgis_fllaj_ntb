@@ -4,12 +4,12 @@
 <head> 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- Primary Meta Tags -->
-<title>POLITEKNIK DUKCAPIL - <?= $title ?></title>
+<title>WEBGIS FASILITAS KELENGKAPAN JALAN - <?= $title ?></title>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="title" content="POLITEKNIK DUKCAPIL 2025">
-<meta name="author" content="Dinas Dukcapil Kota Mataram">
-<meta name="description" content="Inovasi Daerah Dinas Dukcapil Kota Mataram 2025">
-<meta name="keywords" content="dukcapil, dukcapil mataram, dukcapil kota mataram" />
+<meta name="title" content="WEBGIS FASILITAS KELENGKAPAN KESELAMATAN JALAN">
+<meta name="author" content="Dinas Perhubungan Provinsi NTB">
+<meta name="description" content="WEBGIS Inventarisasi Fasilitas Keselamatan Jalan">
+<meta name="keywords" content="dishub, dishub ntb, dishub provinsi ntb" />
 <link rel="manifest" href="<?= base_url('manifest.json') ?>">
 <meta name="theme-color" content="#0d6efd">
 <link rel="apple-touch-icon" href="<?= base_url('assets/') ?>icons/icon-192x192.png">
