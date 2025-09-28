@@ -6,14 +6,18 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'LandingController::index');
-$routes->get('/login', 'LoginController::index');
 
-$routes->get('/jenis-fasilitas', 'JenisFasilitasController::index');
-$routes->get('/fasilitas/add','FasilitasController::add');
+$routes->get('/jenis-fasilitas', 'JenisFasilitasController::index', ['filter' => 'auth']);
+$routes->get('/fasilitas/add','FasilitasController::add', ['filter' => 'auth']);
+
+/* routes Login */
+$routes->get('/login', 'LoginController::index');
+$routes->post('/login', 'LoginController::authenticate');
+$routes->get('/logout', 'LoginController::logout');
 
 /* APIs */
-// $routes->group('api', ['filter' => 'auth'], function ($routes) { //use auth filter later
-$routes->group('api', function ($routes) {
+$routes->group('api', ['filter' => 'auth'], function ($routes) {
+// $routes->group('api', function ($routes) {
     /* Jenis Fasilitas */
     $routes->group('jenis_fasilitas', function ($routes) {
         $routes->get('/', 'JenisFasilitasController::getAll');

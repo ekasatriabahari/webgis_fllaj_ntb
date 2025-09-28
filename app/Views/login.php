@@ -4,7 +4,7 @@
 <head> 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- Primary Meta Tags -->
-<title>WEBGIS FLLAJ | DINAS PERHUBUNGAN PROVINSI NTB - <?= $title ?></title>
+<title>WEBGIS FLLAJ | DINAS PERHUBUNGAN PROVINSI NTB</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="title" content="WEBGIS FLLAJ DISHUB PROVINSI NTB">
 <meta name="author" content="Dinas Perhubungan Provinsi NTB">
