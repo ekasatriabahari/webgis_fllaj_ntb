@@ -27,7 +27,7 @@
                 <div class="form-group">
                     <label for="namaFasilitas">Nama Fasilitas *</label>
                     <input type="text" name="nama_fasilitas" class="form-control" required
-                        placeholder="Contoh: Rambu Stop, Marka Zebra Cross, dll">
+                        placeholder="Contoh: ZOSS SMPN 2 Mataram, Rambu Dilarang Parkir, dll..">
                 </div>
 
                 <div class="form-group">

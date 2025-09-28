@@ -5,7 +5,7 @@
 <head> 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- Primary Meta Tags -->
-<title>WEBGIS FLLAJ | DINAS PERHUBUNGAN PROVINSI NTB - <?= $title ?></title>
+<title>WEBGIS FLLAJ | DINAS PERHUBUNGAN PROVINSI NTB</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="title" content="WEBGIS FLLAJ DISHUB PROVINSI NTB">
 <meta name="author" content="Dinas Perhubungan Provinsi NTB">
@@ -194,12 +194,9 @@
                         <div class="card-body">
                             <form id="filterForm">
                                 <div class="form-group">
-                                    <label for="jenisFasilitas">Jenis Fasilitas Jalan</label>
-                                    <select name="jenisFasilitas" id="jenisFasilitas" class="form-control">
-                                        <option value="">Semua jenis fasilitas</option>
-                                        <option value="rambu">Rambu</option>
-                                        <option value="marka">Marka</option>
-                                        <option value="guradrail">Guradrail</option>
+                                    <label for="kategoriFasilitas">Kategori Fasilitas Jalan</label>
+                                    <select name="kategoriFasilitas" id="kategoriFasilitas" class="form-control">
+                                        <!-- loaded via ajax -->
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -231,11 +228,9 @@
                         <div class="card-body">
                             <div>
                                 <div class="form-group">
-                                    <label for="chartFasilitas">Jenis Fasilitas</label>
+                                    <label for="chartFasilitas">Kategori Fasilitas</label>
                                     <select name="chartFasilitas" id="chartFasilitas" class="form-control">
-                                        <option value="rambu" selected>Rambu</option>
-                                        <option value="marka">Marka</option>
-                                        <option value="guradrail">Guradrail</option>
+                                        <!-- loaded via ajax -->
                                     </select>
                                 </div>
                             </div>
@@ -293,6 +288,8 @@
 
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
+    <script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
     <style>
     #map {
         border-radius: 0.375rem;
@@ -389,10 +386,10 @@
             },
             plotOptions: {
                 pie: {
-                    allowPointSelect: true,
+                    allowPointSelect: false,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: true,
+                        enabled: false,
                         format: '<b>{point.name}</b>: {point.y}%',
                         style: {
                             fontSize: '12px'
@@ -479,53 +476,126 @@ $(document).ready(function() {
 });
 </script>
 <script>
-    // Inisialisasi peta dengan view center di NTB
-    var map = L.map('map').setView([-8.6529, 117.3616], 9); // Koordinat tengah NTB, zoom level 9
+    // Inisialisasi peta
+    var map = L.map('map').setView([-8.6529, 117.3616], 9);
 
-    // Tambahkan base layer (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // --- Base Layer ---
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Contoh polygon sederhana untuk wilayah NTB (simplified)
-    var ntbBounds = [
-        [-8.1, 116.5],  // Northwest
-        [-8.1, 118.5],  // Northeast
-        [-9.2, 118.5],  // Southeast
-        [-9.2, 116.5]   // Southwest
-    ];
-
-    // Tambahkan polygon NTB
-    var ntbPolygon = L.polygon(ntbBounds, {
-        color: 'blue',
-        fillColor: '#3388ff',
-        fillOpacity: 0.1,
-        weight: 2
-    }).addTo(map);
-
-    // Tambahkan marker untuk kota utama di NTB
-    var cities = [
-        {name: "Mataram", coords: [-8.5833, 116.1167]},
-        {name: "Bima", coords: [-8.4600, 118.7267]},
-        {name: "Sumbawa Besar", coords: [-8.4932, 117.4202]},
-        {name: "Praya", coords: [-8.7050, 116.2700]}
-    ];
-
-    cities.forEach(function(city) {
-        L.marker(city.coords)
-            .addTo(map)
-            .bindPopup("<b>" + city.name + "</b><br>Kota di NTB");
+    // --- Shapefile: Wilayah NTB ---
+    var shpMap = new L.Shapefile("<?= base_url('assets/shp/wil_ntb.zip') ?>", {
+        style: function (feature) {
+            return {
+                color: '#0d47a1',       // warna garis tepi (stroke)
+                weight: 2,              // ketebalan garis
+                fillColor: '#64b5f6',   // warna isi
+                fillOpacity: 0.4        // transparansi isi
+            };
+        },
+        onEachFeature: function (feature, layer) {
+            if (feature.properties) {
+                layer.bindPopup(Object.keys(feature.properties)
+                    .map(function (k) { return k + ": " + feature.properties[k]; })
+                    .join("<br />"), { maxHeight: 200 });
+            }
+        }
     });
 
-    // Fit bounds untuk menampilkan seluruh NTB
+    shpMap.once("data:loaded", function () {
+        console.log("finished loaded shapefile");
+    });
+
+    // --- Shapefile: Jalan Provinsi NTB ---
+    var shpJalan = new L.Shapefile("<?= base_url('assets/shp/jalan_provinsi_ntb.zip') ?>", {
+        style: function (feature) {
+            return {
+                color: '#e53935',  // warna garis merah
+                weight: 3,         // ketebalan garis
+                opacity: 0.8       // transparansi garis
+            };
+        },
+        onEachFeature: function (feature, layer) {
+            if (feature.properties) {
+                layer.bindPopup(Object.keys(feature.properties)
+                    .map(function (k) { return k + ": " + feature.properties[k]; })
+                    .join("<br />"), { maxHeight: 200 });
+            }
+        }
+    });
+
+    shpJalan.once("data:loaded", function () {
+        console.log("finished loaded shapefile");
+    });
+
+    // --- Marker kota utama ---
+    var citiesLayer = L.layerGroup();
+    var cities = [
+        { name: "Mataram", coords: [-8.5833, 116.1167] },
+        { name: "Bima", coords: [-8.4600, 118.7267] },
+        { name: "Sumbawa Besar", coords: [-8.4932, 117.4202] },
+        { name: "Praya", coords: [-8.7050, 116.2700] }
+    ];
+    cities.forEach(function (city) {
+        L.marker(city.coords)
+            .bindPopup("<b>" + city.name + "</b><br>Kota di NTB")
+            .addTo(citiesLayer);
+    });
+    citiesLayer.addTo(map);
+
+    // --- Fit bounds ---
     map.fitBounds([
-        [-8.1, 116.5],  // Northwest
-        [-9.2, 118.5]   // Southeast
+        [-8.1, 116.5],
+        [-9.2, 118.5]
     ]);
 
-    // Tambahkan scale control
+    // --- Scale control ---
     L.control.scale().addTo(map);
+
+    // ✅ Layer Control
+    var baseMaps = {
+        "OpenStreetMap": osm
+        // Anda bisa menambahkan base layer lain jika ada
+    };
+
+    var overlayMaps = {
+        "Wilayah NTB": shpMap,
+        "Jalan Provinsi NTB": shpJalan,
+        "Kota Utama": citiesLayer
+    };
+
+    // Tambahkan kontrol layer ke peta
+    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
 </script>
+
+<script>
+    $(() => {
+        $.ajax({
+            url: '<?= site_url("api/jenis_fasilitas") ?>',
+            type: 'GET',
+            data: {
+                'columns[1][search][value]': ''
+            },
+            dataType: 'json',
+            success: (response) => {
+                const allData = response.data;
+
+                // --- isi dropdown kategori (unik) ---
+                const kategoriUnik = [...new Set(allData.map(item => item.kategori))];
+                let optKategori = '<option value="">Pilih Kategori Fasilitas</option>';
+                kategoriUnik.forEach(kat => {
+                    optKategori += `<option value="${kat}">${kat}</option>`;
+                });
+                $('#chartFasilitas, #kategoriFasilitas').html(optKategori);
+            },
+            error: (err) => {
+                console.log(err);
+            }
+        });
+    })
+</script>
+
 <!-- Core -->
 <script src="<?= base_url('assets/template') ?>/@popperjs/core/dist/umd/popper.min.js"></script>
 <script src="<?= base_url('assets/template') ?>/bootstrap/dist/js/bootstrap.min.js"></script>
