@@ -15,6 +15,9 @@ $routes->get('/login', 'LoginController::index');
 $routes->post('/login', 'LoginController::authenticate');
 $routes->get('/logout', 'LoginController::logout');
 
+/* Profile */
+$routes->get('/profile', 'UsersController::profile', ['filter' => 'auth']);
+
 /* APIs */
 $routes->group('api', ['filter' => 'auth'], function ($routes) {
 // $routes->group('api', function ($routes) {
@@ -31,5 +34,14 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->group('fasilitas', function ($routes) {
        $routes->get('/', 'FasilitasController::getAll');
        $routes->post('/', 'FasilitasController::addData'); 
+    });
+
+    /* Users */
+    $routes->group('users', function ($routes) {
+        $routes->get('/', 'UsersController::getAll');
+        $routes->post('/', 'UsersController::addData');
+        $routes->get('(:num)', 'UsersController::detail/$1');
+        $routes->put('/', 'UsersController::updateData');
+        $routes->delete('(:num)', 'UsersController::deleteData/$1');
     });
 });
