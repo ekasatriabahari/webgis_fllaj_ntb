@@ -81,6 +81,14 @@ class JenisFasilitasController extends BaseController
             ], ResponseInterface::HTTP_BAD_REQUEST);
         }
 
+        // Upload icon ke folder FCPATH/uploads/icons/
+        $icon = $this->request->getFile('icon');
+        if ($icon) {
+            $iconName = $icon->getRandomName();
+            $icon->move(FCPATH . 'uploads/icons/', $iconName);
+            $data['icon'] = $iconName;
+        }
+
         $jenis_fasilitas = model('JenisFasilitasModel');
         $saved = $jenis_fasilitas->insert($data);
 
@@ -111,27 +119,76 @@ class JenisFasilitasController extends BaseController
         return $this->response->setJSON($data);
     }
 
-    public function updateData()
+    public function updateData($id = null)
     {
-        $data = $this->request->getRawInputVar();
-        $data['updated_at'] = date('Y-m-d H:i:s');
         $jenis_fasilitas = model('JenisFasilitasModel');
-        $updated = $jenis_fasilitas->update($data['id'], $data);
+
+        // Ambil semua variabel POST (termasuk yang dikirim via FormData)
+        $data = $this->request->getPost();
+        // unset($data['_method']); // hapus spoof method agar tidak ikut disimpan
+
+        $data['updated_at'] = date('Y-m-d H:i:s');
+
+        // ----- Prefix kategori → kode_fasilitas -----
+        $prefixMap = [
+            'Rambu'          => 'RMB',
+            'Marka'          => 'MRK',
+            'Pagar Pengaman' => 'PGR',
+            'Penanda Jalan'  => 'PND',
+            'Penerangan'     => 'PNR',
+            'Pemelandai'     => 'PML',
+            'Lainnya'        => 'LNN',
+        ];
+
+        if (isset($data['kategori']) && isset($prefixMap[$data['kategori']])) {
+            $data['kode_fasilitas'] = $prefixMap[$data['kategori']];
+        } else {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
+                'success'   => false,
+                'message'   => 'Kategori tidak dikenal'
+            ], ResponseInterface::HTTP_BAD_REQUEST);
+        }
+
+        // ----- Upload icon (jika ada file baru) -----
+        $icon = $this->request->getFile('icon');
+        if ($icon && $icon->isValid() && !$icon->hasMoved()) {
+
+            // ambil data lama untuk hapus icon lama
+            $oldData = $jenis_fasilitas->find($id);
+            if ($oldData && !empty($oldData['icon'])) {
+                $oldPath = FCPATH . 'uploads/icons/' . $oldData['icon'];
+                if (is_file($oldPath)) {
+                    @unlink($oldPath); // hapus icon lama
+                }
+            }
+
+            $iconName = $icon->getRandomName();
+            $icon->move(FCPATH . 'uploads/icons/', $iconName);
+            $data['icon'] = $iconName;
+        }
+
+        // ----- Lakukan update -----
+        $updated = $jenis_fasilitas->update($id, $data);
+
         if ($updated) {
             $response = [
-                'status' => 'success',
+                'status'    => 'success',
                 'http_code' => ResponseInterface::HTTP_OK,
-                'success' => true,
-                'message' => 'Data berhasil disimpan',
+                'success'   => true,
+                'data'      => $data,
+                'message'   => 'Data berhasil diupdate',
             ];
         } else {
             $response = [
-                'status' => 'error',
+                'status'    => 'error',
                 'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
-                'success' => false,
-                'message' => 'Data gagal disimpan',
+                'success'   => false,
+                'message'   => 'Data gagal diupdate',
             ];
         }
+
         return $this->response->setJSON($response, $response['http_code']);
     }
 

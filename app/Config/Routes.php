@@ -29,7 +29,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
         $routes->get('/', 'JenisFasilitasController::getAll');
         $routes->post('/', 'JenisFasilitasController::addData');
         $routes->get('(:num)', 'JenisFasilitasController::detail/$1');
-        $routes->put('/', 'JenisFasilitasController::updateData');
+        $routes->post('(:num)', 'JenisFasilitasController::updateData/$1');  // update
         $routes->delete('(:num)', 'JenisFasilitasController::deleteData/$1');
     });
 

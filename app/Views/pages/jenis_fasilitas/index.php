@@ -68,6 +68,35 @@
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3" placeholder="Opsional..."></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label for="icon" class="form-label">Icon (opsional)</label>
+                        <input type="file" class="form-control" id="icon" name="icon" accept="image/*" onchange="previewIcon(this)">
+                        <div id="iconPreview" class="mt-2"></div>
+                        <script>
+                            function previewIcon(input) {
+                                const preview = document.getElementById('iconPreview');
+                                preview.innerHTML = '';
+                                
+                                const files = input.files;
+                                if (files.length > 0) {
+                                    const reader = new FileReader();
+                                    
+                                    reader.onload = function(e) {
+                                        const img = document.createElement('img');
+                                        img.src = e.target.result;
+                                        img.style.maxWidth = '100px';
+                                        img.style.maxHeight = '100px';
+                                        img.style.margin = '5px';
+                                        img.className = 'img-thumbnail';
+                                        
+                                        preview.appendChild(img);
+                                    }
+                                    
+                                    reader.readAsDataURL(files[0]);
+                                }
+                            }
+                        </script>
+                    </div>
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>
@@ -93,6 +122,8 @@
 
     function tambahData()
     {
+        $('#iconPreview').html('');
+        $('#formJenisFasilitas')[0].reset();
         $('#jenisFasilitasModal .modal-title').text('Tambah Jenis Fasilitas');
         $('#jenisFasilitasModal').modal('show');
     }
@@ -138,23 +169,26 @@
         });
     }
 
-    function saveData()
-    {
-        var id = $('#id').val();
-        var method = id ? 'PUT' : 'POST';
-        var data = $('#formJenisFasilitas').serialize();
+    function saveData() {
+        var id   = $('#id').val();
+        var form = $('#formJenisFasilitas')[0];
+        var data = new FormData(form);
+        var url = id ? '<?= site_url("api/jenis_fasilitas") ?>' + '/' + id : '<?= site_url("api/jenis_fasilitas") ?>';
+
         $.ajax({
-            url: '<?= site_url("api/jenis_fasilitas") ?>',
-            type: method,
+            url: url,
+            type: 'POST',
             data: data,
+            enctype: 'multipart/form-data',
+            contentType: false,
+            processData: false,
+            cache: false,
             beforeSend: () => {
                 Swal.fire({
                     title: 'Please Wait...',
                     allowOutsideClick: false,
                     showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    didOpen: () => { Swal.showLoading(); }
                 });
             },
             success: function(response) {
@@ -173,7 +207,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: err.responseJSON.message  
+                    text: err.responseJSON?.message || 'Terjadi kesalahan'
                 });
             }
         });
@@ -190,6 +224,13 @@
                 $('#kategori').val(response.kategori);
                 $('#jenis').val(response.jenis);
                 $('#deskripsi').val(response.deskripsi);
+                let icon = response.icon;
+                let srcIcon = "<?= base_url('uploads/icons/') ?>" + icon;
+                if(icon != null){
+                    $('#iconPreview').html(`<img src="${srcIcon}" class="img-thumbnail" style="max-width: 100px; max-height: 100px; margin: 5px">`);
+                }else{
+                    $('#iconPreview').html(`<div class="alert alert-warning mt-2">No icon uploaded</div>`);
+                }
                 $('#jenisFasilitasModal').modal('show');
             }
         });
