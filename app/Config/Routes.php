@@ -56,4 +56,9 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
         $routes->delete('(:num)', 'UsersController::deleteData/$1');
         $routes->post('reset-password', 'UsersController::resetPassword');
     });
+
+    /* Dashboard */
+    $routes->group('dashboard', function ($routes) {
+        $routes->get('markers', 'DashboardController::getDataMarkers');
+    });
 });

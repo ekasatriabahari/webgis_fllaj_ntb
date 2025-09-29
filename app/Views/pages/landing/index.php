@@ -291,33 +291,33 @@
     <script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
     <script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
     <style>
-    #map {
-        border-radius: 0.375rem;
-        z-index: 1;
-    }
-    
-    /* Pastikan peta responsive */
-    .leaflet-container {
-        height: 100%;
-        width: 100%;
-    }
+        #map {
+            border-radius: 0.375rem;
+            z-index: 1;
+        }
+        
+        /* Pastikan peta responsive */
+        .leaflet-container {
+            height: 100%;
+            width: 100%;
+        }
 
-    #kondisiChartContainer {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+        #kondisiChartContainer {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .highcharts-legend-item text {
-        font-size: 14px !important;
-        font-weight: 600;
-    }
+        .highcharts-legend-item text {
+            font-size: 14px !important;
+            font-weight: 600;
+        }
 
-    .highcharts-data-label {
-        font-weight: bold !important;
-    }
-</style>
+        .highcharts-data-label {
+            font-weight: bold !important;
+        }
+    </style>
 
 <script>
     $(document).ready(function() {
@@ -553,10 +553,9 @@ $(document).ready(function() {
     // --- Scale control ---
     L.control.scale().addTo(map);
 
-    // ✅ Layer Control
+    // Layer Control
     var baseMaps = {
         "OpenStreetMap": osm
-        // Anda bisa menambahkan base layer lain jika ada
     };
 
     var overlayMaps = {
