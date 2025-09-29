@@ -7,13 +7,20 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'LandingController::index');
 
+/* Jenis Fasilitas */
 $routes->get('/jenis-fasilitas', 'JenisFasilitasController::index', ['filter' => 'auth']);
+
+/* Fasilitas */
+$routes->get('/fasilitas','FasilitasController::index', ['filter' => 'auth']);
 $routes->get('/fasilitas/add','FasilitasController::add', ['filter' => 'auth']);
 
 /* routes Login */
 $routes->get('/login', 'LoginController::index');
 $routes->post('/login', 'LoginController::authenticate');
 $routes->get('/logout', 'LoginController::logout');
+
+/* Dashboard */
+$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'auth']);
 
 /* Users */
 $routes->get('/users', 'UsersController::index', ['filter' => 'auth']);
@@ -36,7 +43,8 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     /* Fasilitas */
     $routes->group('fasilitas', function ($routes) {
        $routes->get('/', 'FasilitasController::getAll');
-       $routes->post('/', 'FasilitasController::addData'); 
+       $routes->post('/', 'FasilitasController::addData');
+       $routes->delete('(:num)', 'FasilitasController::deleteData/$1');
     });
 
     /* Users */

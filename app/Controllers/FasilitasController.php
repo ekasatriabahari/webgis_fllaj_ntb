@@ -9,7 +9,49 @@ class FasilitasController extends BaseController
 {
     public function index()
     {
-        //
+        $data = [
+            'title' => 'Daftar Fasilitas',
+            'content' => 'pages/fasilitas/index',
+        ];
+        return view('layout/main', $data);
+    }
+
+    public function getAll()
+    {
+        $model = model('FasilitasModel');
+        $draw   = $this->request->getGet('draw');
+        $start  = $this->request->getGet('start');
+        $length = $this->request->getGet('length');
+
+        // Parameter filter dari DataTables
+        // $filterKategori = $this->request->getGet('columns')[1]['search']['value'];
+
+        // Total seluruh data (tanpa filter)
+        $totalRecords = $model->countAll();
+
+        // Builder untuk data & filter
+        $builder = $model->builder();
+
+        // if (!empty($filterKategori)) {
+        //     $builder->where('kategori', $filterKategori);
+        // }
+
+        // ----- hitung jumlah setelah filter -----
+        // clone builder agar kondisi where tetap sama
+        $filteredBuilder = clone $builder;
+        $filteredRecords = $filteredBuilder->countAllResults();
+
+        // ----- ambil data dengan limit & offset -----
+        $builder->limit($length, $start);
+        $data = $builder->join('jenis_fasilitas', 'fasilitas.jenis_fasilitas_id = jenis_fasilitas.id')
+                ->select('fasilitas.*, jenis_fasilitas.kategori, jenis_fasilitas.jenis')->get()->getResultArray();
+
+        return $this->response->setJSON([
+            'draw'            => intval($draw),
+            'recordsTotal'    => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data'            => $data
+        ]);
     }
 
     public function add()
@@ -96,5 +138,32 @@ class FasilitasController extends BaseController
             'message' => 'Data fasilitas berhasil disimpan',
             'data'    => $data
         ], ResponseInterface::HTTP_CREATED);
+    }
+
+    public function deleteData($id)
+    {
+        $model = model('FasilitasModel');
+        $images = $model->find($id)['foto'];
+        $decodedImages = json_decode($images, true);
+        foreach ($decodedImages as $image) {
+            unlink(FCPATH . 'uploads/images/fasilitas/' . $image);
+        }
+        $deleted = $model->delete($id);
+        if ($deleted) {
+            $response = [
+                'status' => 'success',
+                'success' => true,
+                'data' => 'Data fasilitas berhasil dihapus',
+                'http_code' => ResponseInterface::HTTP_OK,
+            ];
+        } else {
+            $response = [
+                'status' => 'error',
+                'success' => false,
+                'data' => 'Data fasilitas gagal dihapus',
+                'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
+            ];
+        }
+        return $this->response->setJSON($response, $response['http_code']);
     }
 }

@@ -128,58 +128,7 @@
                 console.log(err);
             }
         });
-
-
-        // save data
-        $('#formFasilitas').submit((e) => {
-            e.preventDefault();
-            saveData();
-        })
     });
-
-    function saveData()
-    {
-        var data = $('#formFasilitas').serialize();
-        $.ajax({
-            url: '<?= site_url("api/fasilitas") ?>',
-            type: 'POST',
-            data: data,
-            beforeSend: () => {
-                Swal.fire({
-                    title: 'Please Wait...',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-            },
-            success: function(response) {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: response.message
-                    }).then(() => {
-                        window.location.href = '<?= site_url("fasilitas") ?>';
-                    });
-                }else{
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.message
-                    });
-                }
-            },
-            error: (err) => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: err.responseJSON.message  
-                });
-            }
-        });
-    }
 </script>
 <script>
     // Geolocation API untuk mendapatkan koordinat
@@ -317,20 +266,24 @@
             },
             success: function(response) {
                 if (response.success) {
-                    alert('Data berhasil disimpan!');
-                    document.getElementById('formTambahFasilitas').reset();
-                    document.getElementById('fotoPreview').innerHTML = '';
-                    document.getElementById('locationStatus').innerHTML = '';
-                    
-                    // Refresh peta dan tabel
-                    refreshPeta();
-                    refreshTabel();
-                } else {
-                    alert('Error: ' + response.message);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message
+                    }).then(() => {
+                        $('#formTambahFasilitas')[0].reset();
+                        $('#fotoPreview').html('');
+                        $('#locationStatus').html('');
+                        window.location.href = '<?= site_url("fasilitas") ?>';
+                    });
                 }
             },
             error: function(xhr) {
-                alert('Error menyimpan data: ' + xhr.responseText);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.responseJSON.message  
+                });
             },
             complete: function() {
                 $('#btnSubmit').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan Data');
