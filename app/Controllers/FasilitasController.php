@@ -54,6 +54,39 @@ class FasilitasController extends BaseController
         ]);
     }
 
+    public function detail($id)
+    {
+        $data['title'] = 'Detail Fasilitas';
+        $data['id'] = $id;
+        $data['content'] = 'pages/fasilitas/detail';
+        return view('layout/main', $data);
+    }
+
+    public function getDetail($id)
+    {
+        $model = model('FasilitasModel');
+        $data = $model->join('jenis_fasilitas', 'fasilitas.jenis_fasilitas_id = jenis_fasilitas.id')
+        ->where('fasilitas.id', $id)
+        ->select('fasilitas.*, jenis_fasilitas.kategori, jenis_fasilitas.jenis, jenis_fasilitas.icon')->get()->getResultArray();
+        if (count($data) > 0) {
+            $response = [
+                'status' => 'success',
+                'success' => true,
+                'data' => $data,
+                'http_code' => ResponseInterface::HTTP_OK,
+            ];
+        } else {
+            $response = [
+                'status' => 'error',
+                'success' => false,
+                'data' => 'Data fasilitas tidak ditemukan',
+                'http_code' => ResponseInterface::HTTP_NOT_FOUND,
+            ];
+        }
+        return $this->response->setJSON($response, $response['http_code']);
+        
+    }
+
     public function add()
     {
         $data = [

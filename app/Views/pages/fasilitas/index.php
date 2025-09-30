@@ -155,6 +155,10 @@
         });
     }
 
+    function viewDetail(id){
+        window.open('<?= site_url("fasilitas/detail/") ?>' + id, '_blank');
+    }
+
     function removeData(id){
         Swal.fire({
             title: 'Apakah Anda yakin?',

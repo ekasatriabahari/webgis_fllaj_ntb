@@ -13,6 +13,7 @@ $routes->get('/jenis-fasilitas', 'JenisFasilitasController::index', ['filter' =>
 /* Fasilitas */
 $routes->get('/fasilitas','FasilitasController::index', ['filter' => 'auth']);
 $routes->get('/fasilitas/add','FasilitasController::add', ['filter' => 'auth']);
+$routes->get('/fasilitas/detail/(:num)','FasilitasController::detail/$1', ['filter' => 'auth']);
 
 /* routes Login */
 $routes->get('/login', 'LoginController::index');
@@ -44,6 +45,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->group('fasilitas', function ($routes) {
        $routes->get('/', 'FasilitasController::getAll');
        $routes->post('/', 'FasilitasController::addData');
+       $routes->get('(:num)', 'FasilitasController::getDetail/$1');
        $routes->delete('(:num)', 'FasilitasController::deleteData/$1');
     });
 
