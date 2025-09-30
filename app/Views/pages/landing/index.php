@@ -252,23 +252,29 @@
                             <h5><i class="fas fa-table"></i> Tabel Fasilitas</h5>
                         </div>
                         <div class="card-body">
-                            <div id="tableContainer">
-                                <table id="tableKondisi" class="table table-striped table-bordered" style="width:100%">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Kode Fasilitas</th>
-                                            <th>Nama Fasilitas</th>
-                                            <th>Jenis Fasilitas</th>
-                                            <th>Kondisi</th>
-                                            <th>Tahun Survey</th>
-                                            <th>Detail</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <table id="tableKondisi" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">No</th>
+                                        <th>Kode Fasilitas</th>
+                                        <th>Nama Fasilitas</th>
+                                        <th>Koordinat</th>
+                                        <th>
+                                            <select name="kondisi" id="kondisi" class="form-control">
+                                                <option value="">Semua Kondisi</option>
+                                                <option value="baik">Baik</option>
+                                                <option value="rusak_ringan">Rusak Ringan</option>
+                                                <option value="rusak_berat">Rusak Berat</option>
+                                            </select>
+                                        </th>
+                                        <th>Tahun Survey</th>
+                                        <th>Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -321,39 +327,55 @@
 
 <script>
     $(document).ready(function() {
-        $('#tableKondisi').DataTable();
-        // var tableKondisi = $('#tableKondisi').DataTable({
-        //     "ajax": {
-        //         "url": "<?= base_url('api/kondisi') ?>",
-        //         "dataSrc": "data"
-        //     },
-        //     "columns": [
-        //         { "data": null, "defaultContent": "" },
-        //         { "data": "kode_rambu" },
-        //         { "data": "nama" },
-        //         { "data": "jenis" },
-        //         { "data": "tahun_survey" },
-        //         {
-        //             "data": null,
-        //             "defaultContent": "<button type='button' class='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#detailModal'>Detail</button>"
-        //         }
-        //     ],
-        //     "columnDefs": [
-        //         {
-        //             "targets": 4,
-        //             "render": function(data, type, row, meta) {
-        //                 return "<a href='#' data-bs-toggle='modal' data-bs-target='#detailModal' data-id='" + row.kode_rambu + "'>" + data + "</a>";
-        //             }
-        //         }
-        //     ]
-        // });
+        var tableKondisi = $('#tableKondisi').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '<?= site_url("api/kondisi-fasilitas") ?>',
+                type: 'GET',
+            },
+            columns: [
+                { data: null, orderable: false, searchable: false },
+                { data: null, render: function(data, type, row) {
+                    return `<span class="badge rounded-pill bg-primary">${row.kode_fasilitas} - ${row.jenis}</span>`;
+                }},
+                { data: 'nama_fasilitas'},
+                { data: null, render: function(data, type, row) {
+                    return `lat: ${row.latitude} <br> long: ${row.longitude}`;
+                }},
+                { data: null, render: function(data, type, row) {
+                    return row.kondisi =='baik' ? `<span class="badge rounded-pill bg-success">${row.kondisi}</span>` : row.kondisi == 'rusak_ringan' ? `<span class="badge rounded-pill bg-warning">${row.kondisi}</span>` : `<span class="badge rounded-pill bg-danger">${row.kondisi}</span>`;
+                }},
+                { data: null, render: function(data, type, row) {
+                    return row.tahun_survey;
+                }},
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return `<button class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="View Detail" onclick="viewDetail('${row.id}')"><i class="fas fa-pencil-alt"></i></button>`;
+                    }
+                }
+            ],  
+            drawCallback: function(settings) {
+                var api = this.api();
+                api.column(0).nodes().each(function(cell, i) {
+                    cell.innerHTML = i + 1 + api.context[0]._iDisplayStart;
+                });
+                // Initialize tooltips
+                $('[data-bs-toggle="tooltip"]').tooltip();
+            },
+            initComplete: function() {
+                // Initialize tooltips setelah table loaded
+                $('[data-bs-toggle="tooltip"]').tooltip();
+            }
+        });
 
-        // $('#tableKondisi').on('draw.dt', function() {
-        //     var data = tableKondisi.rows().data();
-        //     $.each(data, function(index, row) {
-        //         $('#tableKondisi tbody tr:eq(' + index + ') td:first-child').text(index + 1);
-        //     });
-        // });
+        $('#kondisi').on('change', function () {
+            let val = $(this).val();
+            $('#tableKondisi').DataTable().column(4).search(val).draw(); // Array Kolom ke-4 = "Kondisi"
+        });
     });
     function initKondisiChart(data) {
         Highcharts.chart('kondisiChartContainer', {
@@ -477,122 +499,302 @@ $(document).ready(function() {
 </script>
 <script>
     // Inisialisasi peta
-    var map = L.map('map').setView([-8.6529, 117.3616], 9);
+    var map = L.map('map').setView([-8.6529, 117.3616], 8);
 
     // --- Base Layer ---
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // --- Shapefile: Wilayah NTB ---
-    var shpMap = new L.Shapefile("<?= base_url('assets/shp/wil_ntb.zip') ?>", {
-        style: function (feature) {
-            return {
-                color: '#0d47a1',       // warna garis tepi (stroke)
-                weight: 2,              // ketebalan garis
-                fillColor: '#64b5f6',   // warna isi
-                fillOpacity: 0.4        // transparansi isi
-            };
-        },
-        onEachFeature: function (feature, layer) {
-            if (feature.properties) {
-                layer.bindPopup(Object.keys(feature.properties)
-                    .map(function (k) { return k + ": " + feature.properties[k]; })
-                    .join("<br />"), { maxHeight: 200 });
-            }
-        }
-    });
-
-    shpMap.once("data:loaded", function () {
-        console.log("finished loaded shapefile");
-    });
-
     // --- Shapefile: Jalan Provinsi NTB ---
     var shpJalan = new L.Shapefile("<?= base_url('assets/shp/jalan_provinsi_ntb.zip') ?>", {
-        style: function (feature) {
-            return {
-                color: '#e53935',  // warna garis merah
-                weight: 3,         // ketebalan garis
-                opacity: 0.8       // transparansi garis
-            };
-        },
+        style: { color: '#e53935', weight: 3, opacity: 0.8 },
         onEachFeature: function (feature, layer) {
             if (feature.properties) {
-                layer.bindPopup(Object.keys(feature.properties)
-                    .map(function (k) { return k + ": " + feature.properties[k]; })
-                    .join("<br />"), { maxHeight: 200 });
+                let props = Object.keys(feature.properties)
+                    .map(k => k + ": " + feature.properties[k])
+                    .join("<br />");
+                layer.bindPopup(props, { maxHeight: 200 });
             }
         }
     });
-
-    shpJalan.once("data:loaded", function () {
-        console.log("finished loaded shapefile");
-    });
-
-    // --- Marker kota utama ---
-    var citiesLayer = L.layerGroup();
-    var cities = [
-        { name: "Mataram", coords: [-8.5833, 116.1167] },
-        { name: "Bima", coords: [-8.4600, 118.7267] },
-        { name: "Sumbawa Besar", coords: [-8.4932, 117.4202] },
-        { name: "Praya", coords: [-8.7050, 116.2700] }
-    ];
-    cities.forEach(function (city) {
-        L.marker(city.coords)
-            .bindPopup("<b>" + city.name + "</b><br>Kota di NTB")
-            .addTo(citiesLayer);
-    });
-    citiesLayer.addTo(map);
-
-    // --- Fit bounds ---
-    map.fitBounds([
-        [-8.1, 116.5],
-        [-9.2, 118.5]
-    ]);
 
     // --- Scale control ---
     L.control.scale().addTo(map);
 
-    // Layer Control
-    var baseMaps = {
-        "OpenStreetMap": osm
-    };
+    // === Custom Layer Control ===
+    var layerControlDiv = L.DomUtil.create('div', 'leaflet-control-layers leaflet-control');
+    layerControlDiv.style.background = '#fff';
+    layerControlDiv.style.padding = '6px';
+    layerControlDiv.style.fontSize = '14px';
+    layerControlDiv.style.maxHeight = '500px';
+    layerControlDiv.style.overflowY = 'auto';
 
-    var overlayMaps = {
-        "Wilayah NTB": shpMap,
-        "Jalan Provinsi NTB": shpJalan,
-        "Kota Utama": citiesLayer
-    };
+    layerControlDiv.innerHTML = `
+  <div class="accordion accordion-flush small" id="accordionLayers" style="font-size: 12px;">
+    <!-- Base Maps -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBase">
+          Base Maps
+        </button>
+      </h2>
+      <div id="collapseBase" class="accordion-collapse collapse show">
+        <div class="accordion-body py-2 px-2">
+          <label class="d-block mb-1"><input type="radio" name="basemap" value="osm" checked> OpenStreetMap</label>
+        </div>
+      </div>
+    </div>
 
-    // Tambahkan kontrol layer ke peta
-    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
-</script>
+    <!-- Shapefile Jalan -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJalan">
+          Shapefile Jalan
+        </button>
+      </h2>
+      <div id="collapseJalan" class="accordion-collapse collapse">
+        <div class="accordion-body py-2 px-2">
+          <label class="d-block mb-1"><input type="checkbox" class="overlay" value="jalan"> Jalan Provinsi NTB</label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Wilayah Administrasi -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWilayah">
+          Wilayah Administrasi
+        </button>
+      </h2>
+      <div id="collapseWilayah" class="accordion-collapse collapse">
+        <div class="accordion-body py-2 px-2" id="wilayah-groups"></div>
+      </div>
+    </div>
 
-<script>
+    <!-- Data Fasilitas -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFasilitas">
+          Data Fasilitas
+        </button>
+      </h2>
+      <div id="collapseFasilitas" class="accordion-collapse collapse">
+        <div class="accordion-body py-2 px-2" id="fasilitas-groups"></div>
+      </div>
+    </div>
+  </div>
+  <style>
+    /* Paksa icon collapse agar tampil */
+    .accordion-button::after {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin-left: auto;
+    content: "";
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23333'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    transition: transform .2s ease-in-out;
+    }
+
+    .accordion-button:not(.collapsed)::after {
+    transform: rotate(-180deg);
+    }
+
+  </style>
+`;
+
+    var customControl = L.control({ position: 'topright' });
+    customControl.onAdd = function() { return layerControlDiv; };
+    customControl.addTo(map);
+
+    // === Event basemap ===
+    layerControlDiv.querySelectorAll('input[name="basemap"]').forEach(input => {
+        input.addEventListener('change', function() {
+            map.eachLayer(function(layer) {
+                if (layer !== shpJalan) map.removeLayer(layer);
+            });
+            if (this.value === 'osm') osm.addTo(map);
+        });
+    });
+
+    // === Event overlay shapefile jalan ===
+    layerControlDiv.querySelectorAll('.overlay').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value === 'jalan') {
+                if (this.checked) map.addLayer(shpJalan);
+                else map.removeLayer(shpJalan);
+            }
+        });
+    });
+
+    // === Wilayah Administrasi ===
+    const colors = [
+        '#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00',
+        '#ffff33','#a65628','#f781bf','#999999','#66c2a5'
+    ];
+    const wilayahFiles = [
+        { file: "1_kab_bima.zip", nama: "Kabupaten Bima" },
+        { file: "2_kab_dompu.zip", nama: "Kabupaten Dompu" },
+        { file: "3_kota_bima.zip", nama: "Kota Bima" },
+        { file: "4_kota_mataram.zip", nama: "Kota Mataram" },
+        { file: "5_kab_lombok_barat.zip", nama: "Kabupaten Lombok Barat" },
+        { file: "6_kab_lombok_tengah.zip", nama: "Kabupaten Lombok Tengah" },
+        { file: "7_kab_lombok_timur.zip", nama: "Kabupaten Lombok Timur" },
+        { file: "8_kab_lombok_utara.zip", nama: "Kabupaten Lombok Utara" },
+        { file: "9_kab_sumbawa_barat.zip", nama: "Kabupaten Sumbawa Barat" },
+        { file: "10_kab_sumbawa.zip", nama: "Kabupaten Sumbawa" },
+    ];
+    var wilayahLayers = {};
+
+    const wilayahContainer = layerControlDiv.querySelector('#wilayah-groups');
+
+    wilayahFiles.forEach((item, idx) => {
+        let color = colors[idx % colors.length];
+        let shpLayer = new L.Shapefile("<?= base_url('assets/shp/') ?>" + item.file, {
+            style: { color: color, weight: 2, fillOpacity: 0.3 },
+            onEachFeature: function(feature, layer) {
+                if (feature.properties) {
+                    let props = Object.keys(feature.properties)
+                        .map(k => `<b>${k}</b>: ${feature.properties[k]}`)
+                        .join("<br>");
+                    layer.bindPopup(`<b>${item.nama}</b><br>${props}`);
+                }
+            }
+        });
+        wilayahLayers[item.nama] = shpLayer;
+
+        // Checkbox
+        let checkbox = document.createElement('label');
+        checkbox.innerHTML = `<input type="checkbox" data-nama="${item.nama}"> ${item.nama}<br>`;
+        wilayahContainer.appendChild(checkbox);
+    });
+
+    // Event checkbox wilayah
+    wilayahContainer.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', function() {
+            let nama = this.dataset.nama;
+            if (this.checked) {
+                map.addLayer(wilayahLayers[nama]);
+            } else {
+                map.removeLayer(wilayahLayers[nama]);
+            }
+        });
+    });
+
+    // === Ambil Data Marker dari API ===
+    var fasilitasGroups = {};
     $(() => {
-        $.ajax({
-            url: '<?= site_url("api/jenis_fasilitas") ?>',
-            type: 'GET',
-            data: {
-                'columns[1][search][value]': ''
-            },
-            dataType: 'json',
-            success: (response) => {
-                const allData = response.data;
+        getMarkers();
+    });
 
-                // --- isi dropdown kategori (unik) ---
-                const kategoriUnik = [...new Set(allData.map(item => item.kategori))];
-                let optKategori = '<option value="">Pilih Kategori Fasilitas</option>';
-                kategoriUnik.forEach(kat => {
-                    optKategori += `<option value="${kat}">${kat}</option>`;
+    function getMarkers() {
+        $.ajax({
+            url: "<?= site_url('api/dashboard/markers') ?>",
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                const data = response.data;
+                const container = document.getElementById('fasilitas-groups');
+                container.innerHTML = ""; // reset
+
+                data.forEach(group => {
+                    // Buat container untuk setiap kode
+                    let kodeContainer = document.createElement('div');
+                    kodeContainer.innerHTML = `<b>${group.kode}</b> - ${group.nama_kode}<br>`;
+                    container.appendChild(kodeContainer);
+
+                    fasilitasGroups[group.kode] = {};
+
+                    group.jenis.forEach(j => {
+                        // Buat layerGroup untuk jenis ini
+                        let jenisLayer = L.layerGroup();
+                        fasilitasGroups[group.kode][j.nama_jenis] = jenisLayer;
+
+                        // Tambah checkbox untuk kontrol
+                        let checkbox = document.createElement('label');
+                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}"> ${j.nama_jenis}<br>`;
+                        kodeContainer.appendChild(checkbox);
+
+                        // Isi data marker
+                        j.data.forEach(item => {
+                            var icon = L.icon({
+                                iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
+                                iconSize: [41, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]
+                            });
+                            L.marker([item.latitude, item.longitude], {icon: icon})
+                                .addTo(jenisLayer)
+                                .bindPopup(markerPopup({...item, jenis: j.nama_jenis}));
+                        });
+                    });
                 });
-                $('#chartFasilitas, #kategoriFasilitas').html(optKategori);
+
+                // Bind event ke semua checkbox
+                container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        let kode = this.dataset.kode;
+                        let jenis = this.dataset.jenis;
+                        if (this.checked) {
+                            map.addLayer(fasilitasGroups[kode][jenis]);
+                        } else {
+                            map.removeLayer(fasilitasGroups[kode][jenis]);
+                        }
+                    });
+                });
             },
             error: (err) => {
                 console.log(err);
             }
         });
-    })
+    }
+
+    function markerPopup(data) {
+        const fotos = JSON.parse(data.foto || '[]');
+        const fotoHTML = fotos.map((foto) => `
+            <img 
+                src="<?= base_url() ?>/uploads/images/fasilitas/${foto}"
+                alt="${data.nama_fasilitas}"
+                class="img-thumbnail m-1 preview-thumb"
+                style="width:100px; height:100px; object-fit:cover; cursor:pointer;"
+                onclick="previewFoto('<?= base_url() ?>/uploads/images/fasilitas/${foto}', '${data.nama_fasilitas}')"
+            >
+        `).join('');
+
+        return `
+            <div class="card shadow-sm border-0" style="width: 260px;">
+                <div class="card-body p-2">
+                    <h6 class="card-title text-primary mb-1">
+                        ${data.kode_fasilitas} – ${data.jenis}
+                    </h6>
+                    <p class="mb-1"><b>Nama:</b> ${data.nama_fasilitas}</p>
+                    <p class="mb-1"><b>Kondisi:</b> ${data.kondisi.replace('_',' ')}</p>
+                    <p class="mb-1"><b>Lat:</b> ${data.latitude}<br>
+                    <b>Lng:</b> ${data.longitude}</p>
+                    <hr class="my-2">
+                    <div class="d-flex flex-wrap justify-content-start">
+                        ${fotoHTML || '<span class="text-muted">Tidak ada foto</span>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function previewFoto(url, title) {
+        Swal.fire({
+            title: title,
+            imageUrl: url,
+            imageAlt: title,
+            width: 'auto',
+            padding: '1em',
+            background: '#fff',
+            showConfirmButton: false,
+            showCloseButton: true,
+        });
+    }
 </script>
 
 <!-- Core -->

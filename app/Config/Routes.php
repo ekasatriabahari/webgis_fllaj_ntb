@@ -30,11 +30,22 @@ $routes->get('/users', 'UsersController::index', ['filter' => 'auth']);
 $routes->get('/profile', 'UsersController::profile', ['filter' => 'auth']);
 
 /* APIs */
+// grup api publik
+$routes->group('api', function ($routes) {
+    /* Jenis Fasilitas */
+    $routes->group('jenis_fasilitas', function ($routes) {
+        $routes->get('/', 'JenisFasilitasController::getAll');
+    });
+
+    $routes->get('kondisi-fasilitas', 'LandingController::kondisiFasilitas');
+});
+
+// grup api private
 $routes->group('api', ['filter' => 'auth'], function ($routes) {
 // $routes->group('api', function ($routes) {
     /* Jenis Fasilitas */
     $routes->group('jenis_fasilitas', function ($routes) {
-        $routes->get('/', 'JenisFasilitasController::getAll');
+        // $routes->get('/', 'JenisFasilitasController::getAll'); /* pindah ke API publik */
         $routes->post('/', 'JenisFasilitasController::addData');
         $routes->get('(:num)', 'JenisFasilitasController::detail/$1');
         $routes->post('(:num)', 'JenisFasilitasController::updateData/$1');  // update
