@@ -142,7 +142,6 @@ function loadDetail() {
       .then(res => {
         if (res.success) {
             const d = res.data[0];
-            console.log(d);
             // Isi form
             $('#id').val(d.id);
             $('#namaFasilitas').val(d.nama_fasilitas);

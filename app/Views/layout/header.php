@@ -10,11 +10,6 @@
 <meta name="author" content="Dinas Perhubungan Provinsi NTB">
 <meta name="description" content="WEBGIS Inventarisasi Fasilitas Keselamatan Jalan">
 <meta name="keywords" content="dishub, dishub ntb, dishub provinsi ntb" />
-<link rel="manifest" href="<?= base_url('manifest.json') ?>">
-<meta name="theme-color" content="#0d6efd">
-<link rel="apple-touch-icon" href="<?= base_url('assets/') ?>icons/icon-192x192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <!-- Jquery -->
 <script src="<?= base_url('assets/template') ?>/js/jquery.min.js"></script>
