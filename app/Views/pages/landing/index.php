@@ -330,7 +330,7 @@
                         </div>
                     </div>
                     <div class="row mt-3 py-2 px-2">
-                        <div id="mapDetail"  style="height: 300px; width: 600%;"></div>
+                        <div id="mapDetail"  style="height: 300px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
@@ -452,7 +452,7 @@
         });
     });
 
-    mapDetail = L.map('mapDetail').setView([-8.6529, 117.3616], 8);
+    var mapDetail = L.map('mapDetail').setView([-8.6529, 117.3616], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapDetail);
     function viewDetail(id)
     {
@@ -498,12 +498,14 @@
                         popupAnchor: [1, -34],
                         shadowSize: [41, 41]
                     });
+                    
+                    // hapus marker lama biar tidak numpuk
+                    if (typeof marker !== 'undefined') {
+                        mapDetail.removeLayer(marker);
+                    }
+
                     marker = L.marker([data.latitude, data.longitude], {icon: icon} ).addTo(mapDetail);
-                    // marker.on('dragend', e => {
-                    //     const pos = e.target.getLatLng();
-                    //     $('#latitude').val(pos.lat.toFixed(6));
-                    //     $('#longitude').val(pos.lng.toFixed(6));
-                    // });
+                    mapDetail.flyTo([data.latitude, data.longitude], 14);
                     
                     $('#detailModal').modal('show');
                 } else {
@@ -524,6 +526,11 @@
             }
         })
     }
+
+    $('#detailModal').on('shown.bs.modal', function () {
+        mapDetail.invalidateSize();
+    });
+
 
 
     function initKondisiChart(data) {

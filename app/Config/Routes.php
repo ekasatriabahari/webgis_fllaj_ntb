@@ -37,6 +37,11 @@ $routes->group('api', function ($routes) {
         $routes->get('/', 'JenisFasilitasController::getAll');
     });
 
+    /* Fasilitas */
+    $routes->group('fasilitas', function ($routes){
+        $routes->get('(:num)', 'FasilitasController::getDetail/$1');
+    });
+    
     /* Dashboard */
     $routes->group('dashboard', function ($routes) {
         $routes->get('markers', 'DashboardController::getDataMarkers');
@@ -61,7 +66,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->group('fasilitas', function ($routes) {
        $routes->get('/', 'FasilitasController::getAll');
        $routes->post('/', 'FasilitasController::addData');
-       $routes->get('(:num)', 'FasilitasController::getDetail/$1');
+    //    $routes->get('(:num)', 'FasilitasController::getDetail/$1'); // move to public API
        $routes->delete('(:num)', 'FasilitasController::deleteData/$1');
     });
 
