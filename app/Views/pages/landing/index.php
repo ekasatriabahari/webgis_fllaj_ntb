@@ -498,7 +498,7 @@
                         popupAnchor: [1, -34],
                         shadowSize: [41, 41]
                     });
-                    
+
                     // hapus marker lama biar tidak numpuk
                     if (typeof marker !== 'undefined') {
                         mapDetail.removeLayer(marker);
@@ -804,7 +804,7 @@
 
                         // Tambah checkbox untuk kontrol
                         let checkbox = document.createElement('label');
-                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}"> ${j.nama_jenis}<br>`;
+                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" checked> ${j.nama_jenis}<br>`;
                         kodeContainer.appendChild(checkbox);
 
                         // Isi data marker
@@ -820,6 +820,11 @@
                                 .addTo(jenisLayer)
                                 .bindPopup(markerPopup({...item, jenis: j.nama_jenis}));
                         });
+                        // Kalau default checked → langsung tambahkan layer ke map
+                        let cbInput = checkbox.querySelector('input');
+                        if (cbInput.checked) {
+                            map.addLayer(jenisLayer);
+                        }
                     });
                 });
 
