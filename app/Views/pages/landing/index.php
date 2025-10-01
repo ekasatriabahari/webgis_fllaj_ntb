@@ -789,10 +789,30 @@
                 const container = document.getElementById('fasilitas-groups');
                 container.innerHTML = ""; // reset
 
+                // ✅ Tambah tombol Select/Deselect All di atas
+                let selectAllDiv = document.createElement('div');
+                selectAllDiv.classList.add('mb-2');
+                selectAllDiv.innerHTML = `
+                    <label>
+                        <input type="checkbox" id="toggle-all" checked>
+                        <b> Tampilkan Semua</b>
+                    </label>
+                    <hr>
+                `;
+                container.appendChild(selectAllDiv);
+
+                fasilitasGroups = {}; // reset global
+
                 data.forEach(group => {
-                    // Buat container untuk setiap kode
+                    // ✅ Buat container untuk setiap kode + checkbox
                     let kodeContainer = document.createElement('div');
-                    kodeContainer.innerHTML = `<b>${group.kode}</b> - ${group.nama_kode}<br>`;
+                    kodeContainer.classList.add('mb-2');
+                    kodeContainer.innerHTML = `
+                        <label>
+                            <input type="checkbox" class="kode-checkbox" data-kode="${group.kode}" checked>
+                            <b>${group.kode}</b> - ${group.nama_kode}
+                        </label><br>
+                    `;
                     container.appendChild(kodeContainer);
 
                     fasilitasGroups[group.kode] = {};
@@ -802,12 +822,15 @@
                         let jenisLayer = L.layerGroup();
                         fasilitasGroups[group.kode][j.nama_jenis] = jenisLayer;
 
-                        // Tambah checkbox untuk kontrol
-                        let checkbox = document.createElement('label');
-                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" checked> ${j.nama_jenis}<br>`;
-                        kodeContainer.appendChild(checkbox);
+                        // Buat checkbox untuk tiap jenis
+                        let jenisCheckbox = document.createElement('label');
+                        jenisCheckbox.innerHTML = `
+                            &nbsp;&nbsp;<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" checked>
+                            ${j.nama_jenis}<br>
+                        `;
+                        kodeContainer.appendChild(jenisCheckbox);
 
-                        // Isi data marker
+                        // Isi data marker ke layer
                         j.data.forEach(item => {
                             var icon = L.icon({
                                 iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
@@ -820,23 +843,60 @@
                                 .addTo(jenisLayer)
                                 .bindPopup(markerPopup({...item, jenis: j.nama_jenis}));
                         });
-                        // Kalau default checked → langsung tambahkan layer ke map
-                        let cbInput = checkbox.querySelector('input');
-                        if (cbInput.checked) {
+
+                        // Kalau default checked → tambahkan ke map
+                        if (jenisCheckbox.querySelector('input').checked) {
                             map.addLayer(jenisLayer);
                         }
                     });
                 });
 
-                // Bind event ke semua checkbox
+                // ✅ Event untuk tiap checkbox jenis
                 container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+                    if (cb.id !== "toggle-all" && !cb.classList.contains("kode-checkbox")) {
+                        cb.addEventListener('change', function() {
+                            let kode = this.dataset.kode;
+                            let jenis = this.dataset.jenis;
+                            if (this.checked) {
+                                map.addLayer(fasilitasGroups[kode][jenis]);
+                            } else {
+                                map.removeLayer(fasilitasGroups[kode][jenis]);
+                            }
+                        });
+                    }
+                });
+
+                // ✅ Event untuk checkbox per kode (show/hide semua jenis di bawahnya)
+                container.querySelectorAll('.kode-checkbox').forEach(cb => {
                     cb.addEventListener('change', function() {
                         let kode = this.dataset.kode;
-                        let jenis = this.dataset.jenis;
-                        if (this.checked) {
-                            map.addLayer(fasilitasGroups[kode][jenis]);
-                        } else {
-                            map.removeLayer(fasilitasGroups[kode][jenis]);
+                        let jenisCheckboxes = container.querySelectorAll(`input[data-kode="${kode}"][data-jenis]`);
+                        jenisCheckboxes.forEach(jcb => {
+                            jcb.checked = this.checked;
+                            let jenis = jcb.dataset.jenis;
+                            if (this.checked) {
+                                map.addLayer(fasilitasGroups[kode][jenis]);
+                            } else {
+                                map.removeLayer(fasilitasGroups[kode][jenis]);
+                            }
+                        });
+                    });
+                });
+
+                // ✅ Event untuk Select All / Deselect All
+                document.getElementById('toggle-all').addEventListener('change', function() {
+                    let isChecked = this.checked;
+                    // centang semua checkbox (kode + jenis)
+                    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+                        cb.checked = isChecked;
+                        if (!cb.id && cb.dataset.kode && cb.dataset.jenis) {
+                            let kode = cb.dataset.kode;
+                            let jenis = cb.dataset.jenis;
+                            if (isChecked) {
+                                map.addLayer(fasilitasGroups[kode][jenis]);
+                            } else {
+                                map.removeLayer(fasilitasGroups[kode][jenis]);
+                            }
                         }
                     });
                 });
