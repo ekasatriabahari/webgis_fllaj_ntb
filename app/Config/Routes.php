@@ -37,6 +37,11 @@ $routes->group('api', function ($routes) {
         $routes->get('/', 'JenisFasilitasController::getAll');
     });
 
+    /* Dashboard */
+    $routes->group('dashboard', function ($routes) {
+        $routes->get('markers', 'DashboardController::getDataMarkers');
+    });
+
     $routes->get('kondisi-fasilitas', 'LandingController::kondisiFasilitas');
 });
 
@@ -70,8 +75,4 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
         $routes->post('reset-password', 'UsersController::resetPassword');
     });
 
-    /* Dashboard */
-    $routes->group('dashboard', function ($routes) {
-        $routes->get('markers', 'DashboardController::getDataMarkers');
-    });
 });

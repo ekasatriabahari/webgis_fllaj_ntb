@@ -288,6 +288,54 @@
             </div>
         </footer>
     </main>
+
+    <!-- modal detail fasilitas -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">Detail Fasilitas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-6">
+                            <label for="kode_fasilitas">Kode Fasilitas:</label>
+                            <input type="text" name="kode_fasilitas" id="kode_fasilitas" class="form-control" disabled>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <label for="nama_fasilitas">Nama Fasilitas:</label>
+                            <input type="text" name="nama_fasilitas" id="nama_fasilitas" class="form-control" disabled>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <label for="" class="me-2">Koordinat:</label>
+                            <div class=" d-flex align-items-center">
+                                <input type="text" name="latitude" id="latitude" class="form-control form-control-inline" disabled>
+                                <input type="text" name="longitude" id="longitude" class="form-control form-control-inline" disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <label for="tahun_survey">Tahun Survey:</label>
+                            <input type="text" name="tahun_survey" id="tahun_survey" class="form-control" disabled>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <label for="catatan">Catatan:</label>
+                            <input type="text" name="catatan" id="catatan" class="form-control" disabled>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12 col-md-6">
+                            <label for="foto_container">Foto:</label>
+                            <div id="foto_container"></div>
+                        </div>
+                    </div>
+                    <div class="row mt-3 py-2 px-2">
+                        <div id="mapDetail"  style="height: 300px; width: 600%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -324,6 +372,32 @@
             font-weight: bold !important;
         }
     </style>
+<script>
+    $(() => {
+        $.ajax({
+            url: '<?= site_url("api/jenis_fasilitas") ?>',
+            type: 'GET',
+            data: {
+                'columns[1][search][value]': ''
+            },
+            dataType: 'json',
+            success: (response) => {
+                const allData = response.data;
+
+                // --- isi dropdown kategori (unik) ---
+                const kategoriUnik = [...new Set(allData.map(item => item.kategori))];
+                let optKategori = '<option value="">Pilih Kategori Fasilitas</option>';
+                kategoriUnik.forEach(kat => {
+                    optKategori += `<option value="${kat}">${kat}</option>`;
+                });
+                $('#kategoriFasilitas, #chartFasilitas').html(optKategori);
+            },
+            error: (err) => {
+                console.log(err);
+            }
+        });
+    });
+</script>
 
 <script>
     $(document).ready(function() {
@@ -377,6 +451,81 @@
             $('#tableKondisi').DataTable().column(4).search(val).draw(); // Array Kolom ke-4 = "Kondisi"
         });
     });
+
+    mapDetail = L.map('mapDetail').setView([-8.6529, 117.3616], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapDetail);
+    function viewDetail(id)
+    {
+        var url = "<?= site_url('api/fasilitas/') ?>" + id;
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "JSON",
+            beforeSend: () => {
+                Swal.fire({
+                    title: 'Loading..',
+                    html: 'Menampilkan Data',
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+            },
+            success: (response) => {
+                Swal.close();
+                if (response.success) {
+                    const data = response.data[0];
+                    $('#kode_fasilitas').val(`${data.kode_fasilitas} - ${data.jenis}`);
+                    $('#nama_fasilitas').val(data.nama_fasilitas);
+                    $('#tahun_survey').val(data.tahun_survey);
+                    $('#catatan').val(data.catatan);
+                    $('#latitude').val(data.latitude);
+                    $('#longitude').val(data.longitude);
+                    let fotoPreviewHTML = '';
+                    let fotos = JSON.parse(data.foto);
+                    if (fotos) {
+                        fotos.forEach(foto => {
+                            fotoPreviewHTML += `<img onclick="previewFoto('<?= base_url('uploads/images/fasilitas/') ?>${foto}', '${data.nama_fasilitas}')" src="<?= base_url('uploads/images/fasilitas/') ?>${foto}" class="img-thumbnail" style="width: 100px; height: 100px; margin-right: 10px;">`;
+                        });
+                    }
+                    $('#foto_container').html(fotoPreviewHTML);
+                    
+                    // Peta
+                    var icon = L.icon({
+                        iconUrl: '<?= base_url('uploads/icons/') ?>' + data.icon,
+                        iconSize: [41, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    });
+                    marker = L.marker([data.latitude, data.longitude], {icon: icon} ).addTo(mapDetail);
+                    // marker.on('dragend', e => {
+                    //     const pos = e.target.getLatLng();
+                    //     $('#latitude').val(pos.lat.toFixed(6));
+                    //     $('#longitude').val(pos.lng.toFixed(6));
+                    // });
+                    
+                    $('#detailModal').modal('show');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.data
+                    });
+                }
+            },
+            error: (err) => {
+                console.log(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.responseText
+                });
+            }
+        })
+    }
+
+
     function initKondisiChart(data) {
         Highcharts.chart('kondisiChartContainer', {
             chart: {
@@ -430,72 +579,6 @@
             }
         });
     }
-
-// Fungsi AJAX untuk mengambil data dummy
-function loadKondisiData() {
-    $.ajax({
-        url: '/api/kondisi-rambu', // Ganti dengan endpoint API Anda
-        method: 'GET',
-        dataType: 'json',
-        beforeSend: function() {
-            // Tampilkan loading spinner
-            $('#kondisiChartContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-        },
-        success: function(response) {
-            // Jika menggunakan API real
-            // initKondisiChart(response.data);
-            
-            // Untuk demo, gunakan data dummy
-            var dummyData = [
-                {
-                    name: 'Baik',
-                    y: 65,
-                    color: '#28a745'
-                },
-                {
-                    name: 'Sedang',
-                    y: 25,
-                    color: '#ffc107'
-                },
-                {
-                    name: 'Rusak Berat',
-                    y: 10,
-                    color: '#dc3545'
-                }
-            ];
-            initKondisiChart(dummyData);
-        },
-        error: function(xhr, status, error) {
-            console.error('Error loading data:', error);
-            
-            // Fallback ke data dummy jika API error
-            var fallbackData = [
-                {
-                    name: 'Baik',
-                    y: 60,
-                    color: '#28a745'
-                },
-                {
-                    name: 'Sedang',
-                    y: 30,
-                    color: '#ffc107'
-                },
-                {
-                    name: 'Rusak Berat',
-                    y: 10,
-                    color: '#dc3545'
-                }
-            ];
-            initKondisiChart(fallbackData);
-            
-            // Tampilkan pesan error
-            $('#kondisiChartContainer').append('<div class="alert alert-warning mt-2">Data menggunakan sample karena koneksi terputus</div>');
-        }
-    });
-}
-$(document).ready(function() {
-    loadKondisiData();
-});
 </script>
 <script>
     // Inisialisasi peta
