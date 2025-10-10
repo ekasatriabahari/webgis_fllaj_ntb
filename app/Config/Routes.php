@@ -29,6 +29,9 @@ $routes->get('/users', 'UsersController::index', ['filter' => 'auth']);
 /* Profile */
 $routes->get('/profile', 'UsersController::profile', ['filter' => 'auth']);
 
+/* Database */
+$routes->get('/database', 'DatabaseController::index', ['filter' => 'auth']);
+
 /* APIs */
 // grup api publik
 $routes->group('api', function ($routes) {
