@@ -69,6 +69,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
     $routes->group('fasilitas', function ($routes) {
        $routes->get('/', 'FasilitasController::getAll');
        $routes->post('/', 'FasilitasController::addData');
+       $routes->post('import-kml', 'ImportFasilitasController::import');
     //    $routes->get('(:num)', 'FasilitasController::getDetail/$1'); // move to public API
        $routes->delete('(:num)', 'FasilitasController::deleteData/$1');
     });
