@@ -9,7 +9,13 @@
                 <!-- Form Upload -->
                 <div class="mb-3">
                     <label for="kmlFile" class="form-label fw-bold">Upload File KML</label>
-                    <input type="file" id="kmlFile" accept=".kml" class="form-control" />
+                    <input type="file" id="kmlFile" accept=".kml" class="form-control"/>
+                </div>
+                <div id="progressContainer" style="margin-top:10px; display:none;">
+                    <div style="width:100%; background:#eee; height:20px; border-radius:5px;">
+                        <div id="progressBar" style="height:20px; width:0%; background:#0d6efd; border-radius:5px;"></div>
+                    </div>
+                    <p id="progressText" style="margin-top:5px; font-size:13px;">0%</p>
                 </div>
 
                 <button id="convertBtn" class="btn btn-primary">
@@ -117,6 +123,7 @@ $(document).ready(function () {
     // 3️⃣ EVENT KONVERSI DAN IMPORT
     // ============================
     $("#convertBtn").on("click", function () {
+        $("#kmlFile").attr("multiple", true);
         const files = $("#kmlFile")[0].files;
         if (!files.length) {
             alert("⚠️ Pilih folder hasil extract KMZ (berisi doc.kml dan folder images/)!");
@@ -126,6 +133,9 @@ $(document).ready(function () {
         const kmlFile = [...files].find(f => f.name.endsWith(".kml"));
         const imageFiles = [...files].filter(f => f.webkitRelativePath.includes("images/"));
         const output = $("#jsonContainer");
+        const progressContainer = $("#progressContainer");
+        const progressBar = $("#progressBar");
+        const progressText = $("#progressText");
 
         if (!kmlFile) {
             output.html("<span style='color:red;'>❌ File .kml tidak ditemukan di folder!</span>");
@@ -182,17 +192,32 @@ $(document).ready(function () {
                 formData.append("data", JSON.stringify(hasil));
                 imageFiles.forEach(f => formData.append("images[]", f));
 
+                progressContainer.show();
+                progressBar.css("width", "0%");
+                progressText.text("0%");
+
                 $.ajax({
                     url: "<?= site_url('api/fasilitas/import-kml'); ?>",
                     method: "POST",
                     data: formData,
                     processData: false,
                     contentType: false,
+                    xhr: function() {
+                    const xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener("progress", function(evt) {
+                            if (evt.lengthComputable) {
+                                const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                                progressBar.css("width", percentComplete + "%");
+                                progressText.text(percentComplete + "%");
+                            }
+                        }, false);
+                        return xhr;
+                    },
                     success: function(res) {
                         let html = `<b>Log Proses Import:</b><br><ul>`;
                         res.log.forEach(item => {
                             const color = item.status === 'success' ? 'green' : 'red';
-                            html += `<li style="color:${color};">${item.kode} - ${item.message || item.status}</li>`;
+                            html += `<li style="color:${color};">${item.kode_fasilitas} - ${item.message || item.status}</li>`;
                         });
                         html += `</ul>`;
                         output.html(html);

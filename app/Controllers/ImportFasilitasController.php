@@ -14,6 +14,7 @@ class ImportFasilitasController extends BaseController
         $fasilitasModel = new FasilitasModel();
         $jenisModel     = new JenisFasilitasModel();
 
+        // --- Ambil JSON payload dari FormData ---
         $jsonString = $this->request->getPost('data');
         $payload = json_decode($jsonString, true);
         $log = [];
@@ -25,9 +26,13 @@ class ImportFasilitasController extends BaseController
             ], ResponseInterface::HTTP_BAD_REQUEST);
         }
 
+        // --- Ambil semua file foto yang dikirim lewat FormData ---
+        $files = $this->request->getFiles();
+        $imageFiles = isset($files['images']) ? $files['images'] : [];
+
         foreach ($payload as $index => $item) {
             try {
-                // --- Cari id jenis_fasilitas berdasarkan nama ---
+                // --- Cari ID jenis_fasilitas berdasarkan nama ---
                 $jenis = $jenisModel
                     ->where('jenis', $item['jenis_fasilitas']['jenis_fasilitas'])
                     ->first();
@@ -39,36 +44,32 @@ class ImportFasilitasController extends BaseController
                 $count  = $fasilitasModel->like('kode_fasilitas', $prefix, 'after')->countAllResults();
                 $kode   = $prefix . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
-                // --- Proses upload foto dari folder local (client) ---
+                // --- Persiapan folder target upload ---
                 $uploadedNames = [];
                 $tahunSurvey   = $item['tahun_survey'];
                 $targetDir     = FCPATH . "uploads/images/fasilitas/{$tahunSurvey}/";
                 if (!is_dir($targetDir)) mkdir($targetDir, 0775, true);
 
-                $sourceDir = $this->request->getGet('source_path'); 
-                // misal dikirim via query ?source_path=/mnt/data/data_survey
+                // --- Cocokkan nama foto dengan file yang dikirim ---
+                foreach ($item['foto'] as $fotoName) {
+                    foreach ($imageFiles as $file) {
+                        if (basename($file->getName()) === $fotoName) {
+                            if ($file->isValid() && !$file->hasMoved()) {
+                                $newName = time() . '_' . uniqid() . '.jpg';
+                                $file->move($targetDir, $newName);
 
-                if (is_dir($sourceDir . '/images')) {
-                    foreach ($item['foto'] as $fotoName) {
-                        $sourceFile = $sourceDir . '/images/' . $fotoName;
-                        if (!is_file($sourceFile)) continue;
+                                $imageService = \Config\Services::image()
+                                    ->withFile($targetDir . $newName)
+                                    ->resize(1024, 768, true, 'auto')
+                                    ->save($targetDir . $newName);
 
-                        $newName = time() . '_' . uniqid() . '.jpg';
-                        $targetFile = $targetDir . $newName;
-
-                        // --- Resize dan simpan ---
-                        $imageService = \Config\Services::image()
-                            ->withFile($sourceFile)
-                            ->resize(1024, 768, true, 'auto')
-                            ->save($targetFile);
-
-                        if (is_file($targetFile)) {
-                            $uploadedNames[] = $newName;
+                                $uploadedNames[] = $newName;
+                            }
                         }
                     }
                 }
 
-                // --- Data untuk simpan ke DB ---
+                // --- Data yang akan disimpan ke DB ---
                 $data = [
                     'kode_fasilitas'     => $kode,
                     'jenis_fasilitas_id' => $jenisId,
@@ -82,6 +83,7 @@ class ImportFasilitasController extends BaseController
                     'created_at'         => $item['created_at']
                 ];
 
+                // --- Simpan ke database ---
                 if ($fasilitasModel->insert($data)) {
                     $log[] = [
                         'kode_fasilitas' => $kode,
@@ -105,6 +107,7 @@ class ImportFasilitasController extends BaseController
             }
         }
 
+        // --- Kembalikan hasil log ke frontend ---
         return $this->response->setJSON([
             'status' => 'completed',
             'total'  => count($payload),
