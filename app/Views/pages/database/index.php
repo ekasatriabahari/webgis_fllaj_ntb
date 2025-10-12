@@ -8,8 +8,10 @@
 
                 <!-- Form Upload -->
                 <div class="mb-3">
-                    <label for="kmlFile" class="form-label fw-bold">Upload File KML</label>
-                    <input type="file" id="kmlFile" accept=".kml" class="form-control"/>
+                    <label for="kmlFile" class="form-label fw-bold">Pilih Folder KMZ</label>
+                    <!-- <input type="file" id="kmlFile" accept=".kml" class="form-control"/> -->
+                     <input type="file" id="kmlFile" webkitdirectory directory multiple class="form-control" />
+                    <small class="text-muted">Pilih folder hasil extract KMZ (berisi doc.kml dan folder images/)</small>
                 </div>
                 <div id="progressContainer" style="margin-top:10px; display:none;">
                     <div style="width:100%; background:#eee; height:20px; border-radius:5px;">
@@ -122,8 +124,7 @@ $(document).ready(function () {
     // ============================
     // 3️⃣ EVENT KONVERSI DAN IMPORT
     // ============================
-    $("#convertBtn").on("click", function () {
-        $("#kmlFile").attr("multiple", true);
+    $("#convertBtn").on("click", async function () {
         const files = $("#kmlFile")[0].files;
         if (!files.length) {
             alert("⚠️ Pilih folder hasil extract KMZ (berisi doc.kml dan folder images/)!");
@@ -143,22 +144,21 @@ $(document).ready(function () {
         }
 
         const reader = new FileReader();
-        reader.onload = function (e) {
+        reader.onload = async function (e) {
             try {
                 const text = e.target.result;
                 const parser = new DOMParser();
                 const kml = parser.parseFromString(text, "text/xml");
                 const geojson = toGeoJSON.kml(kml);
 
+                // Konversi fitur ke array hasil JSON
                 const hasil = geojson.features.map((feature, idx) => {
                     const props = feature.properties;
                     const coords = feature.geometry.coordinates;
-
                     const tgl = new Date(props.timestamp || Date.now());
                     const createdAt = `${tgl.getFullYear()}-${String(tgl.getMonth()+1).padStart(2,'0')}-${String(tgl.getDate()).padStart(2,'0')} ${String(tgl.getHours()).padStart(2,'0')}:${String(tgl.getMinutes()).padStart(2,'0')}:${String(tgl.getSeconds()).padStart(2,'0')}`;
                     const tahunSurvey = tgl.getFullYear();
 
-                    // Ambil nama file foto
                     const photos = [];
                     if (props.pdfmaps_photos) {
                         const regex = /<img\s+src="([^"]+)"/g;
@@ -185,55 +185,63 @@ $(document).ready(function () {
                     };
                 });
 
-                output.text(JSON.stringify(hasil, null, 2));
-
-                // --- Kirim JSON dan foto ke server ---
-                const formData = new FormData();
-                formData.append("data", JSON.stringify(hasil));
-                imageFiles.forEach(f => formData.append("images[]", f));
-
+                // Reset tampilan
+                output.html(`<b>Log Proses Import:</b><br><ul id="importLog"></ul>`);
                 progressContainer.show();
                 progressBar.css("width", "0%");
                 progressText.text("0%");
 
-                $.ajax({
-                    url: "<?= site_url('api/fasilitas/import-kml'); ?>",
-                    method: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    xhr: function() {
-                    const xhr = new window.XMLHttpRequest();
-                        xhr.upload.addEventListener("progress", function(evt) {
-                            if (evt.lengthComputable) {
-                                const percentComplete = Math.round((evt.loaded / evt.total) * 100);
-                                progressBar.css("width", percentComplete + "%");
-                                progressText.text(percentComplete + "%");
-                            }
-                        }, false);
-                        return xhr;
-                    },
-                    success: function(res) {
-                        let html = `<b>Log Proses Import:</b><br><ul>`;
-                        res.log.forEach(item => {
-                            const color = item.status === 'success' ? 'green' : 'red';
-                            html += `<li style="color:${color};">${item.kode_fasilitas} - ${item.message || item.status}</li>`;
-                        });
-                        html += `</ul>`;
-                        output.html(html);
-                    },
-                    error: function(err) {
-                        output.html(`<span style='color:red;'>❌ Gagal import data ke server.</span>`);
-                        console.error(err);
-                    }
-                });
+                // Proses upload satu per satu (sequential)
+                const total = hasil.length;
+                let current = 0;
 
+                for (const item of hasil) {
+                    current++;
+
+                    const formData = new FormData();
+                    formData.append("data", JSON.stringify([item])); // kirim satu item
+
+                    // Tambahkan foto yang cocok
+                    for (const name of item.foto) {
+                        const file = imageFiles.find(f => f.name.endsWith(name));
+                        if (file) formData.append("images[]", file);
+                    }
+
+                    try {
+                        const res = await $.ajax({
+                            url: "<?= site_url('api/fasilitas/import-kml'); ?>",
+                            method: "POST",
+                            data: formData,
+                            processData: false,
+                            contentType: false
+                        });
+
+                        const percent = Math.round((current / total) * 100);
+                        progressBar.css("width", percent + "%");
+                        progressText.text(`${percent}%`);
+
+                        const logEl = $("#importLog");
+                        if (res.log && res.log[0]) {
+                            const itemLog = res.log[0];
+                            const color = itemLog.status === "success" ? "green" : "red";
+                            logEl.append(`<li style="color:${color}">${itemLog.kode_fasilitas} - ${itemLog.message}</li>`);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        $("#importLog").append(`<li style="color:red;">❌ Gagal upload ${item.kode_fasilitas}</li>`);
+                    }
+                }
+
+                progressBar.css("background", "#28a745");
+                progressText.text("✅ Selesai semua");
             } catch (err) {
                 output.html(`<span style='color:red;'>❌ Terjadi kesalahan: ${err.message}</span>`);
             }
         };
         reader.readAsText(kmlFile);
     });
+
+
 });
 </script>
 

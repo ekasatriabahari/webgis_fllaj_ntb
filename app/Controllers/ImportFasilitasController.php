@@ -13,63 +13,70 @@ class ImportFasilitasController extends BaseController
     {
         $fasilitasModel = new FasilitasModel();
         $jenisModel     = new JenisFasilitasModel();
+        $imageService   = \Config\Services::image();
 
-        // --- Ambil JSON payload dari FormData ---
+        // Ambil JSON payload dari FormData
         $jsonString = $this->request->getPost('data');
         $payload = json_decode($jsonString, true);
         $log = [];
 
-        if (!$payload || !is_array($payload)) {
+        // Tangani jika bukan array (mungkin hanya 1 item)
+        if (!$payload) {
             return $this->response->setJSON([
                 'status'  => 'error',
                 'message' => 'Data JSON tidak valid.'
             ], ResponseInterface::HTTP_BAD_REQUEST);
         }
+        if (isset($payload['kode_fasilitas'])) {
+            $payload = [$payload];
+        }
 
-        // --- Ambil semua file foto yang dikirim lewat FormData ---
-        $files = $this->request->getFiles();
-        $imageFiles = isset($files['images']) ? $files['images'] : [];
+        // Ambil semua file foto dari FormData
+        $imageFiles = $this->request->getFileMultiple('images') ?? [];
 
         foreach ($payload as $index => $item) {
             try {
-                // --- Cari ID jenis_fasilitas berdasarkan nama ---
+                // Cari ID jenis_fasilitas
                 $jenis = $jenisModel
                     ->where('jenis', $item['jenis_fasilitas']['jenis_fasilitas'])
                     ->first();
 
-                $jenisId = $jenis ? $jenis['id'] : null;
+                $jenisId = $jenis['id'] ?? null;
+                $kodeJenis = $jenis['kode_fasilitas'] ?? 'UNK';
 
-                // --- Generate kode fasilitas otomatis ---
-                $prefix = strtoupper(substr($jenis ? $jenis['kode_fasilitas'] : 'UNK', 0, 3));
+                // Generate kode fasilitas otomatis
+                $prefix = strtoupper(substr($kodeJenis, 0, 3));
                 $count  = $fasilitasModel->like('kode_fasilitas', $prefix, 'after')->countAllResults();
                 $kode   = $prefix . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
-                // --- Persiapan folder target upload ---
+                // Siapkan folder upload
                 $uploadedNames = [];
                 $tahunSurvey   = $item['tahun_survey'];
                 $targetDir     = FCPATH . "uploads/images/fasilitas/{$tahunSurvey}/";
                 if (!is_dir($targetDir)) mkdir($targetDir, 0775, true);
 
-                // --- Cocokkan nama foto dengan file yang dikirim ---
-                foreach ($item['foto'] as $fotoName) {
-                    foreach ($imageFiles as $file) {
-                        if (basename($file->getName()) === $fotoName) {
-                            if ($file->isValid() && !$file->hasMoved()) {
-                                $newName = time() . '_' . uniqid() . '.jpg';
-                                $file->move($targetDir, $newName);
+                // Upload foto yang sesuai
+                foreach ($imageFiles as $file) {
+                    $originalName = basename($file->getName());
+                    if (in_array($originalName, $item['foto'])) {
+                        if ($file->isValid() && !$file->hasMoved()) {
+                            $newName = time() . '_' . uniqid() . '.' . $file->getClientExtension();
+                            $file->move($targetDir, $newName);
 
-                                $imageService = \Config\Services::image()
-                                    ->withFile($targetDir . $newName)
-                                    ->resize(1024, 768, true, 'auto')
-                                    ->save($targetDir . $newName);
-
-                                $uploadedNames[] = $newName;
+                            try {
+                                $imageService->withFile($targetDir . $newName)
+                                            ->resize(800, 600, true, 'auto')
+                                            ->save($targetDir . $newName);
+                            } catch (\Throwable $e) {
+                                // Abaikan error resize
                             }
+
+                            $uploadedNames[] = $newName;
                         }
                     }
                 }
 
-                // --- Data yang akan disimpan ke DB ---
+                // Data simpan
                 $data = [
                     'kode_fasilitas'     => $kode,
                     'jenis_fasilitas_id' => $jenisId,
@@ -83,12 +90,11 @@ class ImportFasilitasController extends BaseController
                     'created_at'         => $item['created_at']
                 ];
 
-                // --- Simpan ke database ---
                 if ($fasilitasModel->insert($data)) {
                     $log[] = [
                         'kode_fasilitas' => $kode,
                         'status'         => 'success',
-                        'message'        => '✅ Data berhasil diimport'
+                        'message'        => '✅ Data berhasil diimport (' . count($uploadedNames) . ' foto)'
                     ];
                 } else {
                     $log[] = [
@@ -107,11 +113,11 @@ class ImportFasilitasController extends BaseController
             }
         }
 
-        // --- Kembalikan hasil log ke frontend ---
         return $this->response->setJSON([
             'status' => 'completed',
             'total'  => count($payload),
             'log'    => $log
         ]);
     }
+
 }

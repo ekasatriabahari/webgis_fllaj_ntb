@@ -54,6 +54,7 @@ class DashboardController extends BaseController
                 'latitude' => $row['latitude'],
                 'longitude' => $row['longitude'],
                 'kondisi' => $row['kondisi'],
+                'tahun_survey' => $row['tahun_survey'],
                 'foto' => $row['foto'],
             ];
         }

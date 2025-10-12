@@ -249,7 +249,7 @@
                             });
                             L.marker([item.latitude, item.longitude], {icon: icon})
                                 .addTo(jenisLayer)
-                                .bindPopup(markerPopup({...item, jenis: j.nama_jenis}));
+                                .bindPopup(markerPopup({...item, jenis: j.nama_jenis, tahun: item.tahun_survey}));
                         });
                     });
                 });
@@ -277,11 +277,11 @@
         const fotos = JSON.parse(data.foto || '[]');
         const fotoHTML = fotos.map((foto) => `
             <img 
-                src="<?= base_url() ?>/uploads/images/fasilitas/${foto}"
+                src="<?= base_url() ?>/uploads/images/fasilitas/${data.tahun}/${foto}"
                 alt="${data.nama_fasilitas}"
                 class="img-thumbnail m-1 preview-thumb"
                 style="width:100px; height:100px; object-fit:cover; cursor:pointer;"
-                onclick="previewFoto('<?= base_url() ?>/uploads/images/fasilitas/${foto}', '${data.nama_fasilitas}')"
+                onclick="previewFoto('<?= base_url() ?>/uploads/images/fasilitas/${data.tahun}/${foto}', '${data.nama_fasilitas}')"
             >
         `).join('');
 
