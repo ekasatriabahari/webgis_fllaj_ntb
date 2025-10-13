@@ -19,7 +19,7 @@ class DashboardController extends BaseController
     $fasilitas = model('FasilitasModel');
     $rows = $fasilitas
         ->join('jenis_fasilitas', 'fasilitas.jenis_fasilitas_id = jenis_fasilitas.id')
-        ->select('fasilitas.*, jenis_fasilitas.jenis, jenis_fasilitas.kode_fasilitas AS kode, jenis_fasilitas.kategori, jenis_fasilitas.icon')
+        ->select('fasilitas.*, jenis_fasilitas.jenis, jenis_fasilitas.kode_fasilitas AS kode, jenis_fasilitas.kategori, jenis_fasilitas.icon, jenis_fasilitas.marker_color')
         ->get()
         ->getResultArray();
 
@@ -43,6 +43,7 @@ class DashboardController extends BaseController
                 $grouped[$kode]['jenis'][$jenis] = [
                     'nama_jenis' => $jenis,
                     'icon' => $row['icon'],
+                    'marker_color' => $row['marker_color'],
                     'data' => []
                 ];
             }

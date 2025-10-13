@@ -29,6 +29,7 @@
                         </th>
                         <th>Jenis</th>
                         <th width="35%">Deskripsi</th>
+                        <th width="5%">Warna Marker</th>
                         <th width="10%">#</th>
                     </tr>
                 </thead>
@@ -67,6 +68,11 @@
                     <div class="mb-3">
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3" placeholder="Opsional..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="color_code" class="form-label">Warna Marker</label>
+                        <input type="color" class="form-control w-25" id="marker_color" name="marker_color" value="#999999"/>
+                        <small><i>*Pilih salah satu field antara Warna Marker atau Icon untuk tampilan di peta</i></small>
                     </div>
                     <div class="mb-3">
                         <label for="icon" class="form-label">Icon (opsional)</label>
@@ -144,6 +150,10 @@
                 }},
                 { data: 'jenis'},
                 { data: 'deskripsi' },
+                { data: null, render: function(data, type, row) {
+                    let color = row.marker_color;
+                    return color ? `<span class="badge rounded-pill" style="background-color: ${color};">${color}</span>` : `-`;
+                }},
                 {
                     data: null,
                     orderable: false,
@@ -224,6 +234,7 @@
                 $('#kategori').val(response.kategori);
                 $('#jenis').val(response.jenis);
                 $('#deskripsi').val(response.deskripsi);
+                $('#marker_color').val(response.marker_color);
                 let icon = response.icon;
                 let srcIcon = "<?= base_url('uploads/icons/') ?>" + icon;
                 if(icon != null){

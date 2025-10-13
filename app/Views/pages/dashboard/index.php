@@ -18,6 +18,54 @@
         </div>
     </div>
 </div>
+
+<!-- points marker css -->
+<style>
+    /* --- Marker CSS fallback --- */
+    .custom-marker .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 3px rgba(0,0,0,0.3);
+    }
+
+    /* --- Legend styling --- */
+    .leaflet-control.legend {
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #333;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    .leaflet-control.legend h6 {
+    margin: 0 0 6px;
+    font-weight: bold;
+    font-size: 13px;
+    }
+
+    .legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    }
+
+    .legend-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    }
+
+</style>
+
+<!-- untuk mendapatkan data ruas jalan dari layer jalan provinsi -->
+<script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
 <script>
     // Inisialisasi peta
     var map = L.map('map').setView([-8.6529, 117.3616], 8);
@@ -27,6 +75,7 @@
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    let jalanProvinsiGeoJSON = null;
     // --- Shapefile: Jalan Provinsi NTB ---
     var shpJalan = new L.Shapefile("<?= base_url('assets/shp/jalan_provinsi_ntb.zip') ?>", {
         style: { color: '#e53935', weight: 3, opacity: 0.8 },
@@ -38,6 +87,12 @@
                 layer.bindPopup(props, { maxHeight: 200 });
             }
         }
+    });
+
+    // simpan GeoJSON setelah selesai dimuat
+    shpJalan.once("data:loaded", function() {
+        jalanProvinsiGeoJSON = shpJalan.toGeoJSON();
+        console.log("✅ Shapefile jalan provinsi siap dipakai", jalanProvinsiGeoJSON);
     });
 
     // --- Scale control ---
@@ -210,6 +265,87 @@
         getMarkers();
     });
 
+    function getColorByJenis(jenis) {
+        const colors = {
+            "Rambu": "#ff0000ff",
+            "Marka": "#07fff3ff",
+            "Pagar Pengaman": "#dcd935ff",
+            "Penanda Jalan": "#a72828ff",
+            "Penerangan": "#9fc142ff",
+            "Pemelandai": "#fd7e14",
+            "Lainnya": "#6c757d"
+        };
+        return colors[jenis] || "#999";
+    }
+
+    function addLegend(data) {
+        console.log(data);
+        // Hapus legend lama (jika ada)
+        if (window.legendControl) map.removeControl(window.legendControl);
+
+        window.legendControl = L.control({ position: 'bottomleft' });
+
+        window.legendControl.onAdd = function () {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML = '<h6>📍 Jenis Fasilitas</h6>';
+
+            // Gunakan Set agar tidak duplikat
+            const jenisSet = new Set();
+            data.forEach(group => {
+                group.jenis.forEach(j => {
+                    if (!jenisSet.has(j.nama_jenis)) {
+                        jenisSet.add(j.nama_jenis);
+
+                        const color = getColorByJenis(group.nama_kode);
+                        const iconUrl = j.icon ? '<?= base_url('uploads/icons/') ?>' + j.icon : null;
+                        const markerHTML = iconUrl
+                            ? `<img src="${iconUrl}" style="width:20px;height:20px;vertical-align:middle;">`
+                            : j.marker_color ? `<span class="legend-dot" style="background:${j.marker_color}"></span>`
+                            : `<span class="legend-dot" style="background:${color}"></span>`;
+
+                        div.innerHTML += `
+                            <div class="legend-item">
+                                ${markerHTML} ${j.nama_jenis}
+                            </div>
+                        `;
+                    }
+                });
+            });
+
+            return div;
+        };
+
+        window.legendControl.addTo(map);
+    }
+
+    function getNearestRoad(lat, lng) {
+        console.log(jalanProvinsiGeoJSON.features[0].geometry.coordinates);
+
+        if (!jalanProvinsiGeoJSON) return "Tidak ada data jalan";
+
+        const point = turf.point([parseFloat(lng), parseFloat(lat)]);
+        let nearestRoadName = "Tidak diketahui";
+        let wilayah = "Tidak diketahui";
+        let minDistance = Infinity;
+
+        jalanProvinsiGeoJSON.features.forEach(f => {
+            if (!f.geometry || f.geometry.type !== 'LineString') return;
+
+            const line = turf.lineString(f.geometry.coordinates);
+            const snapped = turf.nearestPointOnLine(line, point, { units: 'meters' });
+            const dist = snapped.properties.dist; // jarak dari titik ke garis
+
+            if (dist < minDistance) {
+                minDistance = dist;
+                wilayah = f.properties.Desa_kel + ", " + f.properties.Kecamatan + ", " + f.properties.Kab_Kot || "Tanpa nama";
+                nearestRoadName = f.properties.Nm_Ruas || "Tanpa nama";
+            }
+        });
+
+        return `${nearestRoadName} (${minDistance.toFixed(1)} m - ${wilayah})`;
+    }
+
+
     function getMarkers() {
         $.ajax({
             url: "<?= site_url('api/dashboard/markers') ?>",
@@ -227,7 +363,7 @@
                     container.appendChild(kodeContainer);
 
                     fasilitasGroups[group.kode] = {};
-
+                    var icon;
                     group.jenis.forEach(j => {
                         // Buat layerGroup untuk jenis ini
                         let jenisLayer = L.layerGroup();
@@ -240,19 +376,31 @@
 
                         // Isi data marker
                         j.data.forEach(item => {
-                            var icon = L.icon({
-                                iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
-                                iconSize: [41, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            });
+                            if (j.icon && j.icon.trim() !== "") {
+                                // Icon berbasis file (dari upload/icons/)
+                                icon = L.icon({
+                                    iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
+                                    iconSize: [32, 32],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -30]
+                                });
+                            } else {
+                            // Icon CSS fallback (divIcon)
+                                icon = L.divIcon({
+                                    className: "custom-marker",
+                                    html: `<div class="dot" style="background:${getColorByJenis(group.nama_kode)};"></div>`,
+                                    iconSize: [18, 18],
+                                    iconAnchor: [9, 9]
+                                });
+                            }
                             L.marker([item.latitude, item.longitude], {icon: icon})
                                 .addTo(jenisLayer)
                                 .bindPopup(markerPopup({...item, jenis: j.nama_jenis, tahun: item.tahun_survey}));
                         });
                     });
                 });
+                
+                addLegend(data); // tampil legend dalam peta
 
                 // Bind event ke semua checkbox
                 container.querySelectorAll('input[type=checkbox]').forEach(cb => {
@@ -285,6 +433,9 @@
             >
         `).join('');
 
+        // 🔍 Tambahkan pencarian ruas jalan
+        const jalan = getNearestRoad(data.latitude, data.longitude);
+
         return `
             <div class="card shadow-sm border-0" style="width: 260px;">
                 <div class="card-body p-2">
@@ -293,6 +444,7 @@
                     </h6>
                     <p class="mb-1"><b>Nama:</b> ${data.nama_fasilitas}</p>
                     <p class="mb-1"><b>Kondisi:</b> ${data.kondisi.replace('_',' ')}</p>
+                    <p class="mb-1"><b>Jalan:</b>${jalan}</p>
                     <p class="mb-1"><b>Lat:</b> ${data.latitude}<br>
                     <b>Lng:</b> ${data.longitude}</p>
                     <hr class="my-2">
@@ -303,6 +455,7 @@
             </div>
         `;
     }
+
 
     function previewFoto(url, title) {
         Swal.fire({

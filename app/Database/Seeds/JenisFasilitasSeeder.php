@@ -54,7 +54,7 @@ class JenisFasilitasSeeder extends Seeder
             // FASILITAS LAINNYA
             ['kategori' => 'Lainnya', 'jenis' => 'Cermin Tikungan'],
             ['kategori' => 'Lainnya', 'jenis' => 'JPO (Jembatan Penyeberangan Orang)'],
-            ['kategori' => 'Lainnya', 'jenis' => 'Zebra Cross'],
+            ['kategori' => 'Lainnya', 'jenis' => 'CCTV'],
             ['kategori' => 'Lainnya', 'jenis' => 'Pulau Jalan'],
             ['kategori' => 'Lainnya', 'jenis' => 'Papan Reklame'],
         ];
