@@ -42,7 +42,7 @@
 <script src="<?= base_url('assets/template') ?>/datatables/datatables.min.js"></script>
 </head>
 
-<body>
+<body style="padding: 0px;">
     <style>
         .custom-navbar {
             background-color: #1F2937 !important;
