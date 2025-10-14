@@ -92,7 +92,7 @@
     // simpan GeoJSON setelah selesai dimuat
     shpJalan.once("data:loaded", function() {
         jalanProvinsiGeoJSON = shpJalan.toGeoJSON();
-        console.log("✅ Shapefile jalan provinsi siap dipakai", jalanProvinsiGeoJSON);
+        console.log( jalanProvinsiGeoJSON );
     });
 
     // --- Scale control ---
@@ -107,79 +107,79 @@
     layerControlDiv.style.overflowY = 'auto';
 
     layerControlDiv.innerHTML = `
-  <div class="accordion accordion-flush small" id="accordionLayers" style="font-size: 12px;">
-    <!-- Base Maps -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBase">
-          Base Maps
-        </button>
-      </h2>
-      <div id="collapseBase" class="accordion-collapse collapse show">
-        <div class="accordion-body py-2 px-2">
-          <label class="d-block mb-1"><input type="radio" name="basemap" value="osm" checked> OpenStreetMap</label>
+    <div class="accordion accordion-flush small" id="accordionLayers" style="font-size: 12px;">
+        <!-- Base Maps -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBase">
+            Base Maps
+            </button>
+        </h2>
+        <div id="collapseBase" class="accordion-collapse collapse show">
+            <div class="accordion-body py-2 px-2">
+            <label class="d-block mb-1"><input type="radio" name="basemap" value="osm" checked> OpenStreetMap</label>
+            </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Shapefile Jalan -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJalan">
-          Shapefile Jalan
-        </button>
-      </h2>
-      <div id="collapseJalan" class="accordion-collapse collapse">
-        <div class="accordion-body py-2 px-2">
-          <label class="d-block mb-1"><input type="checkbox" class="overlay" value="jalan"> Jalan Provinsi NTB</label>
         </div>
-      </div>
-    </div>
-    
-    <!-- Wilayah Administrasi -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWilayah">
-          Wilayah Administrasi
-        </button>
-      </h2>
-      <div id="collapseWilayah" class="accordion-collapse collapse">
-        <div class="accordion-body py-2 px-2" id="wilayah-groups"></div>
-      </div>
-    </div>
 
-    <!-- Data Fasilitas -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFasilitas">
-          Data Fasilitas
-        </button>
-      </h2>
-      <div id="collapseFasilitas" class="accordion-collapse collapse">
-        <div class="accordion-body py-2 px-2" id="fasilitas-groups"></div>
-      </div>
+        <!-- Shapefile Jalan -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJalan">
+            Shapefile Jalan
+            </button>
+        </h2>
+        <div id="collapseJalan" class="accordion-collapse collapse">
+            <div class="accordion-body py-2 px-2">
+            <label class="d-block mb-1"><input type="checkbox" class="overlay" value="jalan"> Jalan Provinsi NTB</label>
+            </div>
+        </div>
+        </div>
+        
+        <!-- Wilayah Administrasi -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWilayah">
+            Wilayah Administrasi
+            </button>
+        </h2>
+        <div id="collapseWilayah" class="accordion-collapse collapse">
+            <div class="accordion-body py-2 px-2" id="wilayah-groups"></div>
+        </div>
+        </div>
+
+        <!-- Data Fasilitas -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFasilitas">
+            Data Fasilitas
+            </button>
+        </h2>
+        <div id="collapseFasilitas" class="accordion-collapse collapse">
+            <div class="accordion-body py-2 px-2" id="fasilitas-groups"></div>
+        </div>
+        </div>
     </div>
-  </div>
-  <style>
-    /* Paksa icon collapse agar tampil */
-    .accordion-button::after {
-    flex-shrink: 0;
-    width: 1rem;
-    height: 1rem;
-    margin-left: auto;
-    content: "";
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23333'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-size: 1rem;
-    transition: transform .2s ease-in-out;
-    }
+    <style>
+        /* Paksa icon collapse agar tampil */
+        .accordion-button::after {
+        flex-shrink: 0;
+        width: 1rem;
+        height: 1rem;
+        margin-left: auto;
+        content: "";
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23333'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-size: 1rem;
+        transition: transform .2s ease-in-out;
+        }
 
-    .accordion-button:not(.collapsed)::after {
-    transform: rotate(-180deg);
-    }
+        .accordion-button:not(.collapsed)::after {
+        transform: rotate(-180deg);
+        }
 
-  </style>
-`;
+    </style>
+    `;
 
     var customControl = L.control({ position: 'topright' });
     customControl.onAdd = function() { return layerControlDiv; };
@@ -279,7 +279,6 @@
     }
 
     function addLegend(data) {
-        console.log(data);
         // Hapus legend lama (jika ada)
         if (window.legendControl) map.removeControl(window.legendControl);
 
@@ -319,32 +318,69 @@
     }
 
     function getNearestRoad(lat, lng) {
-        console.log(jalanProvinsiGeoJSON.features[0].geometry.coordinates);
+        if (!jalanProvinsiGeoJSON || !jalanProvinsiGeoJSON.features) {
+            return "Tidak ada data jalan";
+        }
 
-        if (!jalanProvinsiGeoJSON) return "Tidak ada data jalan";
+        // Pastikan koordinat valid
+        lat = parseFloat(lat);
+        lng = parseFloat(lng);
+        if (isNaN(lat) || isNaN(lng)) {
+            console.warn("⚠️ Koordinat tidak valid:", lat, lng);
+            return "Koordinat tidak valid";
+        }
 
-        const point = turf.point([parseFloat(lng), parseFloat(lat)]);
+        const point = turf.point([lng, lat]);
         let nearestRoadName = "Tidak diketahui";
         let wilayah = "Tidak diketahui";
         let minDistance = Infinity;
 
-        jalanProvinsiGeoJSON.features.forEach(f => {
-            if (!f.geometry || f.geometry.type !== 'LineString') return;
+        jalanProvinsiGeoJSON.features.forEach((f, idx) => {
+            if (!f.geometry || !f.geometry.coordinates) return;
 
-            const line = turf.lineString(f.geometry.coordinates);
-            const snapped = turf.nearestPointOnLine(line, point, { units: 'meters' });
-            const dist = snapped.properties.dist; // jarak dari titik ke garis
+            let segments = [];
 
-            if (dist < minDistance) {
-                minDistance = dist;
-                wilayah = f.properties.Desa_kel + ", " + f.properties.Kecamatan + ", " + f.properties.Kab_Kot || "Tanpa nama";
-                nearestRoadName = f.properties.Nm_Ruas || "Tanpa nama";
+            // 🔹 Deteksi tipe geometry
+            if (f.geometry.type === "LineString") {
+                segments = [f.geometry.coordinates];
+            } else if (f.geometry.type === "MultiLineString") {
+                segments = f.geometry.coordinates;
+            } else {
+                console.warn(`⚠️ Geometry tipe ${f.geometry.type} di-skip (fitur ke-${idx})`);
+                return;
             }
+
+            // 🔹 Loop setiap ruas garis
+            segments.forEach((coords, i) => {
+                try {
+                    // Validasi: pastikan semua elemen koordinat numerik
+                    if (
+                        !Array.isArray(coords) ||
+                        coords.length === 0 ||
+                        !coords.every(c => Array.isArray(c) && c.length === 2 && 
+                                        typeof c[0] === "number" && typeof c[1] === "number")
+                    ) {
+                        console.warn(`⚠️ Koordinat tidak valid pada segmen ke-${i} fitur ${idx}`);
+                        return;
+                    }
+
+                    const line = turf.lineString(coords);
+                    const snapped = turf.nearestPointOnLine(line, point, { units: "meters" });
+                    const dist = snapped.properties.dist;
+
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        wilayah = `${f.properties.Desa_Kel || '-'}, ${f.properties.Kecamatan || '-'}, ${f.properties.Kab_Kot || '-'}`;
+                        nearestRoadName = f.properties.Nm_Ruas || "Tanpa nama";
+                    }
+                } catch (err) {
+                    console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
+                }
+            });
         });
 
         return `${nearestRoadName} (${minDistance.toFixed(1)} m - ${wilayah})`;
     }
-
 
     function getMarkers() {
         $.ajax({
@@ -435,6 +471,7 @@
 
         // 🔍 Tambahkan pencarian ruas jalan
         const jalan = getNearestRoad(data.latitude, data.longitude);
+        // const jalan =""
 
         return `
             <div class="card shadow-sm border-0" style="width: 260px;">

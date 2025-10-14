@@ -485,18 +485,17 @@
                     let fotos = JSON.parse(data.foto);
                     if (fotos) {
                         fotos.forEach(foto => {
-                            fotoPreviewHTML += `<img onclick="previewFoto('<?= base_url('uploads/images/fasilitas/') ?>${foto}', '${data.nama_fasilitas}')" src="<?= base_url('uploads/images/fasilitas/') ?>${foto}" class="img-thumbnail" style="width: 100px; height: 100px; margin-right: 10px;">`;
+                            fotoPreviewHTML += `<img onclick="previewFoto('<?= base_url('uploads/images/fasilitas/') ?>${data.tahun_survey}/${foto}', '${data.nama_fasilitas}')" src="<?= base_url('uploads/images/fasilitas/') ?>${data.tahun_survey}/${foto}" class="img-thumbnail" style="width: 100px; height: 100px; margin-right: 10px;">`;
                         });
                     }
                     $('#foto_container').html(fotoPreviewHTML);
                     
                     // Peta
-                    var icon = L.icon({
-                        iconUrl: '<?= base_url('uploads/icons/') ?>' + data.icon,
-                        iconSize: [41, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
+                    var icon = L.divIcon({
+                        className: "custom-marker",
+                        html: `<div class="dot" style="background:${getColorByJenis(data.jenis)};"></div>`,
+                        iconSize: [18, 18],
+                        iconAnchor: [9, 9]
                     });
 
                     // hapus marker lama biar tidak numpuk
@@ -587,6 +586,54 @@
         });
     }
 </script>
+
+<!-- points marker css -->
+<style>
+    /* --- Marker CSS fallback --- */
+    .custom-marker .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 3px rgba(0,0,0,0.3);
+    }
+
+    /* --- Legend styling --- */
+    .leaflet-control.legend {
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #333;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    .leaflet-control.legend h6 {
+    margin: 0 0 6px;
+    font-weight: bold;
+    font-size: 13px;
+    }
+
+    .legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    }
+
+    .legend-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    }
+
+</style>
+
+<!-- untuk mendapatkan data ruas jalan dari layer jalan provinsi -->
+<script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
 <script>
     // Inisialisasi peta
     var map = L.map('map').setView([-8.6529, 117.3616], 8);
@@ -596,6 +643,7 @@
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    let jalanProvinsiGeoJSON = null;
     // --- Shapefile: Jalan Provinsi NTB ---
     var shpJalan = new L.Shapefile("<?= base_url('assets/shp/jalan_provinsi_ntb.zip') ?>", {
         style: { color: '#e53935', weight: 3, opacity: 0.8 },
@@ -607,6 +655,12 @@
                 layer.bindPopup(props, { maxHeight: 200 });
             }
         }
+    });
+
+    // simpan GeoJSON setelah selesai dimuat
+    shpJalan.once("data:loaded", function() {
+        jalanProvinsiGeoJSON = shpJalan.toGeoJSON();
+        console.log( jalanProvinsiGeoJSON );
     });
 
     // --- Scale control ---
@@ -621,79 +675,79 @@
     layerControlDiv.style.overflowY = 'auto';
 
     layerControlDiv.innerHTML = `
-  <div class="accordion accordion-flush small" id="accordionLayers" style="font-size: 12px;">
-    <!-- Base Maps -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBase">
-          Base Maps
-        </button>
-      </h2>
-      <div id="collapseBase" class="accordion-collapse collapse show">
-        <div class="accordion-body py-2 px-2">
-          <label class="d-block mb-1"><input type="radio" name="basemap" value="osm" checked> OpenStreetMap</label>
+    <div class="accordion accordion-flush small" id="accordionLayers" style="font-size: 12px;">
+        <!-- Base Maps -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBase">
+            Base Maps
+            </button>
+        </h2>
+        <div id="collapseBase" class="accordion-collapse collapse show">
+            <div class="accordion-body py-2 px-2">
+            <label class="d-block mb-1"><input type="radio" name="basemap" value="osm" checked> OpenStreetMap</label>
+            </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Shapefile Jalan -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJalan">
-          Shapefile Jalan
-        </button>
-      </h2>
-      <div id="collapseJalan" class="accordion-collapse collapse">
-        <div class="accordion-body py-2 px-2">
-          <label class="d-block mb-1"><input type="checkbox" class="overlay" value="jalan"> Jalan Provinsi NTB</label>
         </div>
-      </div>
-    </div>
-    
-    <!-- Wilayah Administrasi -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWilayah">
-          Wilayah Administrasi
-        </button>
-      </h2>
-      <div id="collapseWilayah" class="accordion-collapse collapse">
-        <div class="accordion-body py-2 px-2" id="wilayah-groups"></div>
-      </div>
-    </div>
 
-    <!-- Data Fasilitas -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFasilitas">
-          Data Fasilitas
-        </button>
-      </h2>
-      <div id="collapseFasilitas" class="accordion-collapse collapse">
-        <div class="accordion-body py-2 px-2" id="fasilitas-groups"></div>
-      </div>
+        <!-- Shapefile Jalan -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJalan">
+            Shapefile Jalan
+            </button>
+        </h2>
+        <div id="collapseJalan" class="accordion-collapse collapse">
+            <div class="accordion-body py-2 px-2">
+            <label class="d-block mb-1"><input type="checkbox" class="overlay" value="jalan"> Jalan Provinsi NTB</label>
+            </div>
+        </div>
+        </div>
+        
+        <!-- Wilayah Administrasi -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWilayah">
+            Wilayah Administrasi
+            </button>
+        </h2>
+        <div id="collapseWilayah" class="accordion-collapse collapse">
+            <div class="accordion-body py-2 px-2" id="wilayah-groups"></div>
+        </div>
+        </div>
+
+        <!-- Data Fasilitas -->
+        <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFasilitas">
+            Data Fasilitas
+            </button>
+        </h2>
+        <div id="collapseFasilitas" class="accordion-collapse collapse">
+            <div class="accordion-body py-2 px-2" id="fasilitas-groups"></div>
+        </div>
+        </div>
     </div>
-  </div>
-  <style>
-    /* Paksa icon collapse agar tampil */
-    .accordion-button::after {
-    flex-shrink: 0;
-    width: 1rem;
-    height: 1rem;
-    margin-left: auto;
-    content: "";
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23333'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-size: 1rem;
-    transition: transform .2s ease-in-out;
-    }
+    <style>
+        /* Paksa icon collapse agar tampil */
+        .accordion-button::after {
+        flex-shrink: 0;
+        width: 1rem;
+        height: 1rem;
+        margin-left: auto;
+        content: "";
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23333'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-size: 1rem;
+        transition: transform .2s ease-in-out;
+        }
 
-    .accordion-button:not(.collapsed)::after {
-    transform: rotate(-180deg);
-    }
+        .accordion-button:not(.collapsed)::after {
+        transform: rotate(-180deg);
+        }
 
-  </style>
-`;
+    </style>
+    `;
 
     var customControl = L.control({ position: 'topright' });
     customControl.onAdd = function() { return layerControlDiv; };
@@ -779,145 +833,238 @@
         getMarkers();
     });
 
+    function getColorByJenis(jenis) {
+        const colors = {
+            "Rambu": "#ff0000ff",
+            "Marka": "#07fff3ff",
+            "Pagar Pengaman": "#dcd935ff",
+            "Penanda Jalan": "#a72828ff",
+            "Penerangan": "#9fc142ff",
+            "Pemelandai": "#fd7e14",
+            "Lainnya": "#6c757d"
+        };
+        return colors[jenis] || "#999";
+    }
+
+    function addLegend(data) {
+        // Hapus legend lama (jika ada)
+        if (window.legendControl) map.removeControl(window.legendControl);
+
+        window.legendControl = L.control({ position: 'bottomleft' });
+
+        window.legendControl.onAdd = function () {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML = '<h6>📍 Jenis Fasilitas</h6>';
+
+            // Gunakan Set agar tidak duplikat
+            const jenisSet = new Set();
+            data.forEach(group => {
+                group.jenis.forEach(j => {
+                    if (!jenisSet.has(j.nama_jenis)) {
+                        jenisSet.add(j.nama_jenis);
+
+                        const color = getColorByJenis(group.nama_kode);
+                        const iconUrl = j.icon ? '<?= base_url('uploads/icons/') ?>' + j.icon : null;
+                        const markerHTML = iconUrl
+                            ? `<img src="${iconUrl}" style="width:20px;height:20px;vertical-align:middle;">`
+                            : j.marker_color ? `<span class="legend-dot" style="background:${j.marker_color}"></span>`
+                            : `<span class="legend-dot" style="background:${color}"></span>`;
+
+                        div.innerHTML += `
+                            <div class="legend-item">
+                                ${markerHTML} ${j.nama_jenis}
+                            </div>
+                        `;
+                    }
+                });
+            });
+
+            return div;
+        };
+
+        window.legendControl.addTo(map);
+    }
+
+    function getNearestRoad(lat, lng) {
+        if (!jalanProvinsiGeoJSON || !jalanProvinsiGeoJSON.features) {
+            return "Tidak ada data jalan";
+        }
+
+        // Pastikan koordinat valid
+        lat = parseFloat(lat);
+        lng = parseFloat(lng);
+        if (isNaN(lat) || isNaN(lng)) {
+            console.warn("⚠️ Koordinat tidak valid:", lat, lng);
+            return "Koordinat tidak valid";
+        }
+
+        const point = turf.point([lng, lat]);
+        let nearestRoadName = "Tidak diketahui";
+        let wilayah = "Tidak diketahui";
+        let minDistance = Infinity;
+
+        jalanProvinsiGeoJSON.features.forEach((f, idx) => {
+            if (!f.geometry || !f.geometry.coordinates) return;
+
+            let segments = [];
+
+            // 🔹 Deteksi tipe geometry
+            if (f.geometry.type === "LineString") {
+                segments = [f.geometry.coordinates];
+            } else if (f.geometry.type === "MultiLineString") {
+                segments = f.geometry.coordinates;
+            } else {
+                console.warn(`⚠️ Geometry tipe ${f.geometry.type} di-skip (fitur ke-${idx})`);
+                return;
+            }
+
+            // 🔹 Loop setiap ruas garis
+            segments.forEach((coords, i) => {
+                try {
+                    // Validasi: pastikan semua elemen koordinat numerik
+                    if (
+                        !Array.isArray(coords) ||
+                        coords.length === 0 ||
+                        !coords.every(c => Array.isArray(c) && c.length === 2 && 
+                                        typeof c[0] === "number" && typeof c[1] === "number")
+                    ) {
+                        console.warn(`⚠️ Koordinat tidak valid pada segmen ke-${i} fitur ${idx}`);
+                        return;
+                    }
+
+                    const line = turf.lineString(coords);
+                    const snapped = turf.nearestPointOnLine(line, point, { units: "meters" });
+                    const dist = snapped.properties.dist;
+
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        wilayah = `${f.properties.Desa_Kel || '-'}, ${f.properties.Kecamatan || '-'}, ${f.properties.Kab_Kot || '-'}`;
+                        nearestRoadName = f.properties.Nm_Ruas || "Tanpa nama";
+                    }
+                } catch (err) {
+                    console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
+                }
+            });
+        });
+
+        return `${nearestRoadName} (${minDistance.toFixed(1)} m - ${wilayah})`;
+    }
+
     function getMarkers() {
         $.ajax({
             url: "<?= site_url('api/dashboard/markers') ?>",
             type: 'GET',
             dataType: 'json',
+            beforeSend: () => {
+                Swal.fire({
+                    title: 'Memuat Data Peta...',
+                    html: 'Mohon tunggu, sedang memuat fasilitas dan shapefile jalan',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            },
             success: function(response) {
                 const data = response.data;
                 const container = document.getElementById('fasilitas-groups');
                 container.innerHTML = ""; // reset
-
-                // ✅ Tambah tombol Select/Deselect All di atas
-                let selectAllDiv = document.createElement('div');
-                selectAllDiv.classList.add('mb-2');
-                selectAllDiv.innerHTML = `
-                    <label>
-                        <input type="checkbox" id="toggle-all" checked>
-                        <b> Tampilkan Semua</b>
-                    </label>
-                    <hr>
-                `;
-                container.appendChild(selectAllDiv);
-
-                fasilitasGroups = {}; // reset global
+                fasilitasGroups = {};
 
                 data.forEach(group => {
-                    // ✅ Buat container untuk setiap kode + checkbox
+                    // Buat container tiap kategori fasilitas
                     let kodeContainer = document.createElement('div');
-                    kodeContainer.classList.add('mb-2');
-                    kodeContainer.innerHTML = `
-                        <label>
-                            <input type="checkbox" class="kode-checkbox" data-kode="${group.kode}" checked>
-                            <b>${group.kode}</b> - ${group.nama_kode}
-                        </label><br>
-                    `;
+                    kodeContainer.innerHTML = `<b>${group.kode}</b> - ${group.nama_kode}<br>`;
                     container.appendChild(kodeContainer);
 
                     fasilitasGroups[group.kode] = {};
+                    let icon;
 
                     group.jenis.forEach(j => {
-                        // Buat layerGroup untuk jenis ini
+                        // Buat layerGroup untuk tiap jenis
                         let jenisLayer = L.layerGroup();
                         fasilitasGroups[group.kode][j.nama_jenis] = jenisLayer;
 
-                        // Buat checkbox untuk tiap jenis
-                        let jenisCheckbox = document.createElement('label');
-                        jenisCheckbox.innerHTML = `
-                            &nbsp;&nbsp;<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" checked>
+                        // Tambah checkbox kontrol (langsung checked)
+                        let checkbox = document.createElement('label');
+                        checkbox.innerHTML = `
+                            <input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" checked> 
                             ${j.nama_jenis}<br>
                         `;
-                        kodeContainer.appendChild(jenisCheckbox);
+                        kodeContainer.appendChild(checkbox);
 
-                        // Isi data marker ke layer
+                        // Tambah marker ke layer
                         j.data.forEach(item => {
-                            var icon = L.icon({
-                                iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
-                                iconSize: [41, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            });
-                            L.marker([item.latitude, item.longitude], {icon: icon})
+                            if (j.icon && j.icon.trim() !== "") {
+                                icon = L.icon({
+                                    iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
+                                    iconSize: [32, 32],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -30]
+                                });
+                            } else {
+                                icon = L.divIcon({
+                                    className: "custom-marker",
+                                    html: `<div class="dot" style="background:${getColorByJenis(group.nama_kode)};"></div>`,
+                                    iconSize: [18, 18],
+                                    iconAnchor: [9, 9]
+                                });
+                            }
+
+                            L.marker([item.latitude, item.longitude], { icon: icon })
                                 .addTo(jenisLayer)
-                                .bindPopup(markerPopup({...item, jenis: j.nama_jenis}));
+                                .bindPopup(markerPopup({ ...item, jenis: j.nama_jenis, tahun: item.tahun_survey }));
                         });
 
-                        // Kalau default checked → tambahkan ke map
-                        if (jenisCheckbox.querySelector('input').checked) {
-                            map.addLayer(jenisLayer);
-                        }
+                        // Tambah layer langsung ke peta (karena sudah dicentang)
+                        map.addLayer(jenisLayer);
                     });
                 });
 
-                // ✅ Event untuk tiap checkbox jenis
-                container.querySelectorAll('input[type=checkbox]').forEach(cb => {
-                    if (cb.id !== "toggle-all" && !cb.classList.contains("kode-checkbox")) {
-                        cb.addEventListener('change', function() {
-                            let kode = this.dataset.kode;
-                            let jenis = this.dataset.jenis;
-                            if (this.checked) {
-                                map.addLayer(fasilitasGroups[kode][jenis]);
-                            } else {
-                                map.removeLayer(fasilitasGroups[kode][jenis]);
-                            }
-                        });
-                    }
-                });
+                addLegend(data); // tampilkan legend
 
-                // ✅ Event untuk checkbox per kode (show/hide semua jenis di bawahnya)
-                container.querySelectorAll('.kode-checkbox').forEach(cb => {
+                // Event handler checkbox
+                container.querySelectorAll('input[type=checkbox]').forEach(cb => {
                     cb.addEventListener('change', function() {
                         let kode = this.dataset.kode;
-                        let jenisCheckboxes = container.querySelectorAll(`input[data-kode="${kode}"][data-jenis]`);
-                        jenisCheckboxes.forEach(jcb => {
-                            jcb.checked = this.checked;
-                            let jenis = jcb.dataset.jenis;
-                            if (this.checked) {
-                                map.addLayer(fasilitasGroups[kode][jenis]);
-                            } else {
-                                map.removeLayer(fasilitasGroups[kode][jenis]);
-                            }
-                        });
-                    });
-                });
-
-                // ✅ Event untuk Select All / Deselect All
-                document.getElementById('toggle-all').addEventListener('change', function() {
-                    let isChecked = this.checked;
-                    // centang semua checkbox (kode + jenis)
-                    container.querySelectorAll('input[type=checkbox]').forEach(cb => {
-                        cb.checked = isChecked;
-                        if (!cb.id && cb.dataset.kode && cb.dataset.jenis) {
-                            let kode = cb.dataset.kode;
-                            let jenis = cb.dataset.jenis;
-                            if (isChecked) {
-                                map.addLayer(fasilitasGroups[kode][jenis]);
-                            } else {
-                                map.removeLayer(fasilitasGroups[kode][jenis]);
-                            }
+                        let jenis = this.dataset.jenis;
+                        if (this.checked) {
+                            map.addLayer(fasilitasGroups[kode][jenis]);
+                        } else {
+                            map.removeLayer(fasilitasGroups[kode][jenis]);
                         }
                     });
                 });
+
+                // 🔹 Setelah semua marker dimuat, buka panel Data Fasilitas otomatis
+                $('#collapseFasilitas').addClass('show');
+                Swal.close();
             },
             error: (err) => {
-                console.log(err);
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memuat Data',
+                    text: 'Terjadi kesalahan saat memuat data marker.'
+                });
             }
         });
     }
+
 
     function markerPopup(data) {
         const fotos = JSON.parse(data.foto || '[]');
         const fotoHTML = fotos.map((foto) => `
             <img 
-                src="<?= base_url() ?>/uploads/images/fasilitas/${foto}"
+                src="<?= base_url() ?>/uploads/images/fasilitas/${data.tahun}/${foto}"
                 alt="${data.nama_fasilitas}"
                 class="img-thumbnail m-1 preview-thumb"
                 style="width:100px; height:100px; object-fit:cover; cursor:pointer;"
-                onclick="previewFoto('<?= base_url() ?>/uploads/images/fasilitas/${foto}', '${data.nama_fasilitas}')"
+                onclick="previewFoto('<?= base_url() ?>/uploads/images/fasilitas/${data.tahun}/${foto}', '${data.nama_fasilitas}')"
             >
         `).join('');
+
+        // 🔍 Tambahkan pencarian ruas jalan
+        const jalan = getNearestRoad(data.latitude, data.longitude);
+        // const jalan =""
 
         return `
             <div class="card shadow-sm border-0" style="width: 260px;">
@@ -927,6 +1074,7 @@
                     </h6>
                     <p class="mb-1"><b>Nama:</b> ${data.nama_fasilitas}</p>
                     <p class="mb-1"><b>Kondisi:</b> ${data.kondisi.replace('_',' ')}</p>
+                    <p class="mb-1"><b>Jalan:</b>${jalan}</p>
                     <p class="mb-1"><b>Lat:</b> ${data.latitude}<br>
                     <b>Lng:</b> ${data.longitude}</p>
                     <hr class="my-2">
@@ -937,6 +1085,7 @@
             </div>
         `;
     }
+
 
     function previewFoto(url, title) {
         Swal.fire({
