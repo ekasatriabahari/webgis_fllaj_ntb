@@ -154,17 +154,17 @@
         <section class="d-flex justify-content-center">
             <nav class="navbar custom-navbar navbar-expand-lg w-100">
                 <div class="container-fluid">
-                    <a class="navbar-brand" href="#">Navbar</a>
+                    <a class="navbar-brand" href="#home"><img src="<?= base_url('assets/images/') ?>ntbprov.webp" alt="Webgis Fasilitas Jalan Dishub NTB"> WEBGIS</a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavDropdown">
                         <ul class="navbar-nav">
                             <li class="nav-item">
-                                <a class="nav-link active" aria-current="page" href="#">Home</a>
+                                <a class="nav-link active" aria-current="page" href="#home">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#">Features</a>
+                                <a class="nav-link" href="#tableKondisi">Fasilitas</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#">Pricing</a>
@@ -184,7 +184,7 @@
                 </div>
             </nav>
         </section>
-        <section class="vh-lg-100 mt-lg-0 bg-soft mb-5 px-3">
+        <section class="vh-lg-100 mt-lg-0 bg-soft mb-5 px-3" id="home">
             <div class="row mt-3">
                 <div class="col-md-3 col-sm-12">
                     <div class="card">
