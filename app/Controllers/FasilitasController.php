@@ -137,7 +137,7 @@ class FasilitasController extends BaseController
             foreach ($files['foto'] as $file) {
                 if ($file->isValid() && ! $file->hasMoved()) {
                     $newName = $file->getRandomName();
-                    $file->move(FCPATH . 'uploads/images/fasilitas/', $newName);
+                    $file->move(FCPATH . 'uploads/images/fasilitas/' . $this->request->getPost('tahun_survey'), $newName);
                     $uploadedNames[] = $newName;
                 }
             }
@@ -176,10 +176,11 @@ class FasilitasController extends BaseController
     public function deleteData($id)
     {
         $model = model('FasilitasModel');
-        $images = $model->find($id)['foto'];
+        $data = $model->find($id);
+        $images = $data['foto'];
         $decodedImages = json_decode($images, true);
         foreach ($decodedImages as $image) {
-            unlink(FCPATH . 'uploads/images/fasilitas/' . $image);
+            unlink(FCPATH . 'uploads/images/fasilitas/' . $data['tahun_survey'] . '/' . $image);
         }
         $deleted = $model->delete($id);
         if ($deleted) {
