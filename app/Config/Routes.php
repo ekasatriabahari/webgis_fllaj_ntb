@@ -15,6 +15,9 @@ $routes->get('/fasilitas','FasilitasController::index', ['filter' => 'auth']);
 $routes->get('/fasilitas/add','FasilitasController::add', ['filter' => 'auth']);
 $routes->get('/fasilitas/detail/(:num)','FasilitasController::detail/$1', ['filter' => 'auth']);
 
+/* Rencana */
+$routes->get('/rencana','RencanaController::index', ['filter' => 'auth']);
+
 /* routes Login */
 $routes->get('/login', 'LoginController::index');
 $routes->post('/login', 'LoginController::authenticate');
@@ -72,6 +75,15 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
        $routes->post('import-kml', 'ImportFasilitasController::import');
     //    $routes->get('(:num)', 'FasilitasController::getDetail/$1'); // move to public API
        $routes->delete('(:num)', 'FasilitasController::deleteData/$1');
+    });
+
+    /* Rencana */
+    $routes->group('rencana', function ($routes) {
+        $routes->get('/', 'RencanaController::getAll');
+        $routes->post('/', 'RencanaController::addData');
+        $routes->get('(:num)', 'RencanaController::detail/$1');
+        $routes->put('(:num)', 'RencanaController::updateData/$1');
+        $routes->delete('(:num)', 'RencanaController::deleteData/$1');
     });
 
     /* Users */
