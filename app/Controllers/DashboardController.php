@@ -15,73 +15,138 @@ class DashboardController extends BaseController
     }
 
     public function getDataMarkers()
-{
-    $fasilitas = model('FasilitasModel');
-    $rows = $fasilitas
-        ->join('jenis_fasilitas', 'fasilitas.jenis_fasilitas_id = jenis_fasilitas.id')
-        ->select('fasilitas.*, jenis_fasilitas.jenis, jenis_fasilitas.kode_fasilitas AS kode, jenis_fasilitas.kategori, jenis_fasilitas.icon, jenis_fasilitas.marker_color')
-        ->get()
-        ->getResultArray();
+    {
+        $fasilitas = model('FasilitasModel');
+        $rencana = model('RencanaModel');
 
-    if ($rows) {
-        // --- grouping ---
-        $grouped = [];
-        foreach ($rows as $row) {
-            $kode = $row['kode'];
-            $kategori = $row['kategori'];
-            $jenis = $row['jenis'];
+        // --- Ambil data fasilitas + join jenis_fasilitas ---
+        $rowsFasilitas = $fasilitas
+            ->join('jenis_fasilitas', 'fasilitas.jenis_fasilitas_id = jenis_fasilitas.id')
+            ->select('fasilitas.*, jenis_fasilitas.jenis, jenis_fasilitas.kode_fasilitas AS kode, jenis_fasilitas.kategori, jenis_fasilitas.icon, jenis_fasilitas.marker_color')
+            ->get()
+            ->getResultArray();
 
-            if (!isset($grouped[$kode])) {
-                $grouped[$kode] = [
-                    'kode' => $kode,
-                    'nama_kode' => $kategori,
-                    'jenis' => []
+        // --- Ambil data rencana ---
+        $rowsRencana = $rencana
+            ->join('jenis_fasilitas', 'rencana.jenis_fasilitas_id = jenis_fasilitas.id')
+            ->select('rencana.*, jenis_fasilitas.jenis, jenis_fasilitas.kode_fasilitas AS kode, jenis_fasilitas.kategori, jenis_fasilitas.icon, jenis_fasilitas.marker_color')
+            ->get()
+            ->getResultArray();
+
+        // --- Proses grouping fasilitas seperti semula ---
+        $groupedFasilitas = [];
+        if ($rowsFasilitas) {
+            foreach ($rowsFasilitas as $row) {
+                $kode = $row['kode'];
+                $kategori = $row['kategori'];
+                $jenis = $row['jenis'];
+
+                if (!isset($groupedFasilitas[$kode])) {
+                    $groupedFasilitas[$kode] = [
+                        'kode' => $kode,
+                        'nama_kode' => $kategori,
+                        'jenis' => []
+                    ];
+                }
+
+                if (!isset($groupedFasilitas[$kode]['jenis'][$jenis])) {
+                    $groupedFasilitas[$kode]['jenis'][$jenis] = [
+                        'nama_jenis' => $jenis,
+                        'icon' => $row['icon'],
+                        'marker_color' => $row['marker_color'],
+                        'data' => []
+                    ];
+                }
+
+                $groupedFasilitas[$kode]['jenis'][$jenis]['data'][] = [
+                    'id' => $row['id'],
+                    'kode_fasilitas' => $row['kode_fasilitas'],
+                    'nama_fasilitas' => $row['nama_fasilitas'],
+                    'latitude' => $row['latitude'],
+                    'longitude' => $row['longitude'],
+                    'kondisi' => $row['kondisi'],
+                    'catatan' => $row['catatan'],
+                    'tahun_survey' => $row['tahun_survey'],
+                    'foto' => $row['foto'],
                 ];
             }
-
-            if (!isset($grouped[$kode]['jenis'][$jenis])) {
-                $grouped[$kode]['jenis'][$jenis] = [
-                    'nama_jenis' => $jenis,
-                    'icon' => $row['icon'],
-                    'marker_color' => $row['marker_color'],
-                    'data' => []
-                ];
-            }
-
-            $grouped[$kode]['jenis'][$jenis]['data'][] = [
-                'id' => $row['id'],
-                'kode_fasilitas' => $row['kode_fasilitas'],
-                'nama_fasilitas' => $row['nama_fasilitas'],
-                'latitude' => $row['latitude'],
-                'longitude' => $row['longitude'],
-                'kondisi' => $row['kondisi'],
-                'tahun_survey' => $row['tahun_survey'],
-                'foto' => $row['foto'],
-            ];
         }
 
         // ubah associative array jenis jadi array numerik
-        $finalData = array_values(array_map(function ($item) {
+        $finalFasilitas = array_values(array_map(function ($item) {
             $item['jenis'] = array_values($item['jenis']);
             return $item;
-        }, $grouped));
+        }, $groupedFasilitas));
 
-        $response = [
-            'status' => 'success',
-            'success' => true,
-            'data' => $finalData,
-            'http_code' => ResponseInterface::HTTP_OK,
-        ];
-    } else {
-        $response = [
-            'status' => 'error',
-            'success' => false,
-            'data' => 'Data fasilitas tidak ditemukan',
-            'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
-        ];
+        // --- Proses grouping rencana seperti semula ---
+        $groupedRencana = [];
+        if ($rowsRencana) {
+            foreach ($rowsRencana as $row) {
+                $kode = $row['kode'];
+                $kategori = $row['kategori'];
+                $jenis = $row['jenis'];
+
+                if (!isset($groupedRencana[$kode])) {
+                    $groupedRencana[$kode] = [
+                        'kode' => $kode,
+                        'nama_kode' => $kategori,
+                        'jenis' => []
+                    ];
+                }
+
+                if (!isset($groupedRencana[$kode]['jenis'][$jenis])) {
+                    $groupedRencana[$kode]['jenis'][$jenis] = [
+                        'nama_jenis' => $jenis,
+                        'icon' => $row['icon'],
+                        'marker_color' => $row['marker_color'],
+                        'data' => []
+                    ];
+                }
+
+                $groupedRencana[$kode]['jenis'][$jenis]['data'][] = [
+                    'id' => $row['id'],
+                    'kode_fasilitas' => $row['kode_fasilitas'],
+                    'nama_fasilitas' => $row['nama_fasilitas'],
+                    'latitude' => $row['latitude'],
+                    'longitude' => $row['longitude'],
+                    'catatan' => $row['catatan'],
+                    'tahun_survey' => $row['tahun_survey'],
+                    'foto' => $row['foto'],
+                ];
+            }
+        }
+
+        // ubah associative array jenis jadi array numerik
+        $finalRencana = array_values(array_map(function ($item) {
+            $item['jenis'] = array_values($item['jenis']);
+            return $item;
+        }, $groupedRencana));
+
+        // --- Buat response ---
+        if (!empty($finalFasilitas) || !empty($rowsRencana)) {
+            $response = [
+                'status' => 'success',
+                'success' => true,
+                'data' => [
+                    'fasilitas' => $finalFasilitas,
+                    'rencana' => $finalRencana
+                ],
+                'http_code' => ResponseInterface::HTTP_OK,
+            ];
+        } else {
+            $response = [
+                'status' => 'error',
+                'success' => false,
+                'data' => [
+                    'fasilitas' => [],
+                    'rencana' => []
+                ],
+                'http_code' => ResponseInterface::HTTP_BAD_REQUEST,
+            ];
+        }
+
+        return $this->response->setJSON($response, $response['http_code']);
     }
 
-    return $this->response->setJSON($response, $response['http_code']);
-}
 
 }

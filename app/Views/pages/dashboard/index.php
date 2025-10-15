@@ -159,6 +159,17 @@
             <div class="accordion-body py-2 px-2" id="fasilitas-groups"></div>
         </div>
         </div>
+        <!-- Data Rencana -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRencana">
+                Data Rencana
+                </button>
+            </h2>
+            <div id="collapseRencana" class="accordion-collapse collapse">
+                <div class="accordion-body py-2 px-2" id="rencana-groups"></div>
+            </div>
+        </div>
     </div>
     <style>
         /* Paksa icon collapse agar tampil */
@@ -261,6 +272,7 @@
 
     // === Ambil Data Marker dari API ===
     var fasilitasGroups = {};
+    var rencanaGroups = {};
     $(() => {
         getMarkers();
     });
@@ -278,42 +290,47 @@
         return colors[jenis] || "#999";
     }
 
-    function addLegend(data) {
-        // Hapus legend lama (jika ada)
+    function addLegend(fasilitasData, rencanaData) {
         if (window.legendControl) map.removeControl(window.legendControl);
-
         window.legendControl = L.control({ position: 'bottomleft' });
 
         window.legendControl.onAdd = function () {
             const div = L.DomUtil.create('div', 'info legend');
-            div.innerHTML = '<h6>📍 Jenis Fasilitas</h6>';
+            div.innerHTML = '<h6>📍 Legend</h6>';
 
-            // Gunakan Set agar tidak duplikat
+            // --- Fasilitas ---
             const jenisSet = new Set();
-            data.forEach(group => {
+            fasilitasData.forEach(group => {
                 group.jenis.forEach(j => {
                     if (!jenisSet.has(j.nama_jenis)) {
                         jenisSet.add(j.nama_jenis);
-
-                        const color = getColorByJenis(group.nama_kode);
                         const iconUrl = j.icon ? '<?= base_url('uploads/icons/') ?>' + j.icon : null;
                         const markerHTML = iconUrl
                             ? `<img src="${iconUrl}" style="width:20px;height:20px;vertical-align:middle;">`
-                            : j.marker_color ? `<span class="legend-dot" style="background:${j.marker_color}"></span>`
-                            : `<span class="legend-dot" style="background:${color}"></span>`;
-
-                        div.innerHTML += `
-                            <div class="legend-item">
-                                ${markerHTML} ${j.nama_jenis}
-                            </div>
-                        `;
+                            : `<span class="legend-dot" style="background:${j.marker_color || '#999'}"></span>`;
+                        div.innerHTML += `<div class="legend-item">${markerHTML} ${j.nama_jenis}</div>`;
                     }
                 });
             });
 
+            // --- Rencana ---
+            if (rencanaData && rencanaData.length > 0) {
+                div.innerHTML += `<hr><h6>🗺️ Rencana</h6>`;
+                const rencanaSet = new Set();
+                rencanaData.forEach(item => {
+                    if (!rencanaSet.has(item.jenis_rencana)) {
+                        rencanaSet.add(item.jenis_rencana);
+                        const iconUrl = item.icon ? '<?= base_url('uploads/icons/') ?>' + item.icon : null;
+                        const markerHTML = iconUrl
+                            ? `<img src="${iconUrl}" style="width:20px;height:20px;vertical-align:middle;">`
+                            : `<span class="legend-dot" style="background:${item.marker_color || '#007bff'}"></span>`;
+                        div.innerHTML += `<div class="legend-item">${markerHTML} ${item.jenis_rencana}</div>`;
+                    }
+                });
+            }
+
             return div;
         };
-
         window.legendControl.addTo(map);
     }
 
@@ -388,32 +405,39 @@
             type: 'GET',
             dataType: 'json',
             success: function(response) {
-                const data = response.data;
-                const container = document.getElementById('fasilitas-groups');
-                container.innerHTML = ""; // reset
+                const fasilitasData = response.data.fasilitas || [];
+                const rencanaData = response.data.rencana || [];
 
-                data.forEach(group => {
-                    // Buat container untuk setiap kode
+                const fasilitasContainer = document.getElementById('fasilitas-groups');
+                const rencanaContainer = document.getElementById('rencana-groups');
+                fasilitasContainer.innerHTML = "";
+                rencanaContainer.innerHTML = "";
+
+                fasilitasGroups = {};
+                rencanaGroups = {};
+
+                // ======================
+                // === Data Fasilitas ===
+                // ======================
+                fasilitasData.forEach(group => {
                     let kodeContainer = document.createElement('div');
                     kodeContainer.innerHTML = `<b>${group.kode}</b> - ${group.nama_kode}<br>`;
-                    container.appendChild(kodeContainer);
+                    fasilitasContainer.appendChild(kodeContainer);
 
                     fasilitasGroups[group.kode] = {};
-                    var icon;
                     group.jenis.forEach(j => {
-                        // Buat layerGroup untuk jenis ini
                         let jenisLayer = L.layerGroup();
                         fasilitasGroups[group.kode][j.nama_jenis] = jenisLayer;
 
-                        // Tambah checkbox untuk kontrol
+                        // Checkbox per jenis fasilitas
                         let checkbox = document.createElement('label');
-                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}"> ${j.nama_jenis}<br>`;
+                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-fasilitas"> ${j.nama_jenis}<br>`;
                         kodeContainer.appendChild(checkbox);
 
-                        // Isi data marker
+                        // Marker per data
                         j.data.forEach(item => {
+                            let icon;
                             if (j.icon && j.icon.trim() !== "") {
-                                // Icon berbasis file (dari upload/icons/)
                                 icon = L.icon({
                                     iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
                                     iconSize: [32, 32],
@@ -421,51 +445,109 @@
                                     popupAnchor: [0, -30]
                                 });
                             } else {
-                            // Icon CSS fallback (divIcon)
                                 icon = L.divIcon({
                                     className: "custom-marker",
-                                    html: `<div class="dot" style="background:${getColorByJenis(group.nama_kode)};"></div>`,
+                                    html: `<div class="dot" style="background:${j.marker_color || getColorByJenis(group.nama_kode)};"></div>`,
                                     iconSize: [18, 18],
                                     iconAnchor: [9, 9]
                                 });
                             }
-                            L.marker([item.latitude, item.longitude], {icon: icon})
+
+                            L.marker([item.latitude, item.longitude], { icon: icon })
                                 .addTo(jenisLayer)
-                                .bindPopup(markerPopup({...item, jenis: j.nama_jenis, tahun: item.tahun_survey}));
+                                .bindPopup(markerPopup({ ...item, jenis: j.nama_jenis, tahun: item.tahun_survey, catatan: item.catatan }));
                         });
                     });
                 });
-                
-                addLegend(data); // tampil legend dalam peta
 
-                // Bind event ke semua checkbox
-                container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+                // Checkbox event fasilitas
+                fasilitasContainer.querySelectorAll('.cb-fasilitas').forEach(cb => {
                     cb.addEventListener('change', function() {
                         let kode = this.dataset.kode;
                         let jenis = this.dataset.jenis;
-                        if (this.checked) {
-                            map.addLayer(fasilitasGroups[kode][jenis]);
-                        } else {
-                            map.removeLayer(fasilitasGroups[kode][jenis]);
-                        }
+                        if (this.checked) map.addLayer(fasilitasGroups[kode][jenis]);
+                        else map.removeLayer(fasilitasGroups[kode][jenis]);
                     });
                 });
+
+
+                // ======================
+                // === Data Rencana ===
+                // ======================
+                if (rencanaData.length > 0) {
+                    rencanaData.forEach(group => {
+                        let kodeContainer = document.createElement('div');
+                        kodeContainer.innerHTML = `<b>${group.kode}</b> - ${group.nama_kode}<br>`;
+                        rencanaContainer.appendChild(kodeContainer);
+
+                        rencanaGroups[group.kode] = {};
+                        group.jenis.forEach(j => {
+                            let jenisLayer = L.layerGroup();
+                            rencanaGroups[group.kode][j.nama_jenis] = jenisLayer;
+
+                            // Checkbox per jenis rencana
+                            let checkbox = document.createElement('label');
+                            checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-rencana"> ${j.nama_jenis}<br>`;
+                            kodeContainer.appendChild(checkbox);
+
+                            // Marker per data
+                            j.data.forEach(item => {
+                                let icon;
+                                if (j.icon && j.icon.trim() !== "") {
+                                    icon = L.icon({
+                                        iconUrl: '<?= base_url('uploads/icons/') ?>' + j.icon,
+                                        iconSize: [32, 32],
+                                        iconAnchor: [16, 32],
+                                        popupAnchor: [0, -30]
+                                    });
+                                } else {
+                                    icon = L.divIcon({
+                                        className: "custom-marker",
+                                        html: `<div class="dot" style="background:${j.marker_color || getColorByJenis(group.nama_kode)};"></div>`,
+                                        iconSize: [18, 18],
+                                        iconAnchor: [9, 9]
+                                    });
+                                }
+
+                                L.marker([item.latitude, item.longitude], { icon: icon })
+                                    .addTo(jenisLayer)
+                                    .bindPopup(markerPopup({ ...item, jenis: j.nama_jenis, tahun: item.tahun_survey, catatan: item.catatan }));
+                            });
+                        });
+                    });
+
+                    // Checkbox event rencana
+                    rencanaContainer.querySelectorAll('.cb-rencana').forEach(cb => {
+                        cb.addEventListener('change', function() {
+                            let kode = this.dataset.kode;
+                            let jenis = this.dataset.jenis;
+                            if (this.checked) map.addLayer(rencanaGroups[kode][jenis]);
+                            else map.removeLayer(rencanaGroups[kode][jenis]);
+                        });
+                    });
+                } else {
+                    rencanaContainer.innerHTML = `<span class="text-muted">Tidak ada data rencana.</span>`;
+                }
+
+                // Gabungkan legend
+                addLegend(fasilitasData, rencanaData);
             },
             error: (err) => {
-                console.log(err);
+                console.error(err);
             }
         });
     }
+
 
     function markerPopup(data) {
         const fotos = JSON.parse(data.foto || '[]');
         const fotoHTML = fotos.map((foto) => `
             <img 
-                src="<?= base_url() ?>/uploads/images/fasilitas/${data.tahun}/${foto}"
+                src="<?= base_url() ?>/uploads/images/${data.kode_fasilitas.includes('RNC') ? 'rencana' : 'fasilitas'}/${data.tahun}/${foto}"
                 alt="${data.nama_fasilitas}"
                 class="img-thumbnail m-1 preview-thumb"
                 style="width:100px; height:100px; object-fit:cover; cursor:pointer;"
-                onclick="previewFoto('<?= base_url() ?>/uploads/images/fasilitas/${data.tahun}/${foto}', '${data.nama_fasilitas}')"
+                onclick="previewFoto('<?= base_url() ?>/uploads/images/${data.kode_fasilitas.includes('RNC') ? 'rencana' : 'fasilitas'}/${data.tahun}/${foto}', '${data.nama_fasilitas}')"
             >
         `).join('');
 
@@ -480,10 +562,11 @@
                         ${data.kode_fasilitas} – ${data.jenis}
                     </h6>
                     <p class="mb-1"><b>Nama:</b> ${data.nama_fasilitas}</p>
-                    <p class="mb-1"><b>Kondisi:</b> ${data.kondisi.replace('_',' ')}</p>
+                    <p class="mb-1"><b>Kondisi:</b> ${data.kondisi ? data.kondisi.replace('_',' ') : 'Rencana'}</p>
                     <p class="mb-1"><b>Jalan:</b>${jalan}</p>
                     <p class="mb-1"><b>Lat:</b> ${data.latitude}<br>
                     <b>Lng:</b> ${data.longitude}</p>
+                    <p><b>Catatan:</b> ${data.catatan}</p>
                     <hr class="my-2">
                     <div class="d-flex flex-wrap justify-content-start">
                         ${fotoHTML || '<span class="text-muted">Tidak ada foto</span>'}

@@ -40,6 +40,17 @@
 <!-- Datatables -->
 <link rel="text/css" href="<?= base_url('assets/template') ?>/datatables/datatables.min.css">
 <script src="<?= base_url('assets/template') ?>/datatables/datatables.min.js"></script>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
+<script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
+
+<!-- untuk mendapatkan data ruas jalan dari layer jalan provinsi -->
+<script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
 </head>
 
 <body style="padding: 0px;">
@@ -186,13 +197,7 @@
         </footer>
     </main>
     
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<!-- Leaflet JavaScript -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
-<script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
 <style>
     #map {
         border-radius: 0.375rem;
@@ -267,11 +272,9 @@
 
 </style>
 
-<!-- untuk mendapatkan data ruas jalan dari layer jalan provinsi -->
-<script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
 <script>
     // Inisialisasi peta
-    var map = L.map('map').setView([-8.6529, 117.3616], 8);
+    var map = L.map('map').setView([-8.6529, 117.3616], 9);
 
     // --- Base Layer ---
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
