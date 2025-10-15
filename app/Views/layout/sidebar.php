@@ -137,13 +137,8 @@
                     <div class="multi-level collapse" id="menuRencana">
                         <ul class="flex-column nav">
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= site_url() ?>/users">
-                                    <span class="sidebar-text" id="submenu-pengguna">Pengguna</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="<?= site_url() ?>/database">
-                                    <span class="sidebar-text" id="submenu-database">Database</span>
+                                <a class="nav-link" href="<?= site_url() ?>/rencana">
+                                    <span class="sidebar-text" id="submenu-rencana-daftar">Daftar</span>
                                 </a>
                             </li>
                         </ul>
