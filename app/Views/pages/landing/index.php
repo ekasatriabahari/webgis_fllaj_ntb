@@ -151,94 +151,13 @@
         }
     </style>
     <main>
-        <section class="d-flex justify-content-center">
-            <nav class="navbar custom-navbar navbar-expand-lg w-100">
-                <div class="container-fluid">
-                    <a class="navbar-brand" href="#home"><img src="<?= base_url('assets/images/') ?>ntbprov.webp" alt="Webgis Fasilitas Jalan Dishub NTB"> WEBGIS</a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                        <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link active" aria-current="page" href="#home">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#tableKondisi">Fasilitas</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#tableRencana">Rencana</a>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Dropdown link
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#">Action</a></li>
-                                    <li><a class="dropdown-item" href="#">Another action</a></li>
-                                    <li><a class="dropdown-item" href="#">Something else here</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-        </section>
+        <?php include('navbar.php'); ?>
+
         <section class="vh-lg-100 mt-lg-0 bg-soft mb-5 px-3" id="home">
+
+            <!-- Map Section -->
             <div class="row mt-3">
-                <div class="col-md-3 col-sm-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="fas fa-list"></i> Filter Data</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="filterForm">
-                                <div class="form-group">
-                                    <label for="kategoriFasilitas">Kategori Fasilitas Jalan</label>
-                                    <select name="kategoriFasilitas" id="kategoriFasilitas" class="form-control">
-                                        <!-- loaded via ajax -->
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="kondisi">Kondisi</label>
-                                    <select name="jenisFasilitas" id="jenisFasilitas" class="form-control">
-                                        <option value="">Semua Kondisi</option>
-                                        <option value="baik">Baik</option>
-                                        <option value="sedang">Rusak Sedang</option>
-                                        <option value="berat">Rusak Berat</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="tahun">Tahun Survey</label>
-                                    <select name="tahun" id="tahun" class="form-control">
-                                        <option value="2025" selected>2025</option>
-                                        <option value="2026">2026</option>
-                                    </select>
-                                </div>
-                                <div class="d-flex justify-content-end mt-3">
-                                    <button type="submit" class="btn btn-primary">Filter</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h5><i class="fa-solid fa-chart-pie"></i> Presentase Kondisi Fasilitas</h5>
-                        </div>
-                        <div class="card-body">
-                            <div>
-                                <div class="form-group">
-                                    <label for="chartFasilitas">Kategori Fasilitas</label>
-                                    <select name="chartFasilitas" id="chartFasilitas" class="form-control">
-                                        <!-- loaded via ajax -->
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mt-3" id="kondisiChartContainer" style="height: 300px; width: 100%;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9 col-sm-12">
+                <div class="col-md-12 col-sm-12">
                     <div class="card">
                         <div class="card-header">
                             <h5><i class="fas fa-map-marked-alt"></i> Peta Fasilitas Keselamatan Jalan</h5>
@@ -247,60 +166,15 @@
                             <div id="map" style="height: 600px; width: 100%;"></div>
                         </div>
                     </div>
-                    <div class="card mt-3 mb-5">
-                        <div class="card-header">
-                            <h5><i class="fas fa-table"></i> Tabel Fasilitas</h5>
-                        </div>
-                        <div class="card-body">
-                            <table id="tableKondisi" class="table table-striped table-bordered" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th width="5%">No</th>
-                                        <th>Kode Fasilitas</th>
-                                        <th>Nama Fasilitas</th>
-                                        <th>Koordinat</th>
-                                        <th>
-                                            <select name="kondisi" id="kondisi" class="form-control">
-                                                <option value="">Semua Kondisi</option>
-                                                <option value="baik">Baik</option>
-                                                <option value="rusak_ringan">Rusak Ringan</option>
-                                                <option value="rusak_berat">Rusak Berat</option>
-                                            </select>
-                                        </th>
-                                        <th>Tahun Survey</th>
-                                        <th>Detail</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="fas fa-table"></i> Tabel Rencana</h5>
-                        </div>
-                        <div class="card-body">
-                            <table class="table table-bordered table-striped" id="tableRencana">
-                                <thead>
-                                    <tr>
-                                        <th width="5%">No</th>
-                                        <th>Jenis Fasilitas</th>
-                                        <th>Nama Fasilitas</th>
-                                        <th>Koordinat</th>
-                                        <th>Tahun Survey</th>
-                                        <th>Detail</th>
-                                    </tr>
-                                </thead>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
+            <?php include('charts.php'); ?>
+            
+            <?php include('fasilitas.php'); ?>
+            
+            <?php include('rencana.php'); ?>
+
         </section>
         <!-- footer -->
         <footer class="bg-white rounded shadow p-5 mb-4 mt-4 mx-3">
@@ -311,304 +185,42 @@
             </div>
         </footer>
     </main>
-
-    <!-- modal detail fasilitas -->
-    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailModalLabel">Detail Fasilitas</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-12 col-md-6">
-                            <label for="kode_fasilitas">Kode Fasilitas:</label>
-                            <input type="text" name="kode_fasilitas" id="kode_fasilitas" class="form-control" disabled>
-                        </div>
-                        <div class="col-sm-12 col-md-6">
-                            <label for="nama_fasilitas">Nama Fasilitas:</label>
-                            <input type="text" name="nama_fasilitas" id="nama_fasilitas" class="form-control" disabled>
-                        </div>
-                        <div class="col-sm-12 col-md-6">
-                            <label for="" class="me-2">Koordinat:</label>
-                            <div class=" d-flex align-items-center">
-                                <input type="text" name="latitude" id="latitude" class="form-control form-control-inline" disabled>
-                                <input type="text" name="longitude" id="longitude" class="form-control form-control-inline" disabled>
-                            </div>
-                        </div>
-                        <div class="col-sm-12 col-md-6">
-                            <label for="tahun_survey">Tahun Survey:</label>
-                            <input type="text" name="tahun_survey" id="tahun_survey" class="form-control" disabled>
-                        </div>
-                        <div class="col-sm-12 col-md-6">
-                            <label for="catatan">Catatan:</label>
-                            <input type="text" name="catatan" id="catatan" class="form-control" disabled>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-12 col-md-6">
-                            <label for="foto_container">Foto:</label>
-                            <div id="foto_container"></div>
-                        </div>
-                    </div>
-                    <div class="row mt-3 py-2 px-2">
-                        <div id="mapDetail"  style="height: 300px; width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <!-- Leaflet JavaScript -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
-    <script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
-    <style>
-        #map {
-            border-radius: 0.375rem;
-            z-index: 1;
-        }
-        
-        /* Pastikan peta responsive */
-        .leaflet-container {
-            height: 100%;
-            width: 100%;
-        }
-
-        #kondisiChartContainer {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .highcharts-legend-item text {
-            font-size: 14px !important;
-            font-weight: 600;
-        }
-
-        .highcharts-data-label {
-            font-weight: bold !important;
-        }
-    </style>
-<script>
-    $(() => {
-        $.ajax({
-            url: '<?= site_url("api/jenis_fasilitas") ?>',
-            type: 'GET',
-            data: {
-                'columns[1][search][value]': ''
-            },
-            dataType: 'json',
-            success: (response) => {
-                const allData = response.data;
-
-                // --- isi dropdown kategori (unik) ---
-                const kategoriUnik = [...new Set(allData.map(item => item.kategori))];
-                let optKategori = '<option value="">Pilih Kategori Fasilitas</option>';
-                kategoriUnik.forEach(kat => {
-                    optKategori += `<option value="${kat}">${kat}</option>`;
-                });
-                $('#kategoriFasilitas, #chartFasilitas').html(optKategori);
-            },
-            error: (err) => {
-                console.log(err);
-            }
-        });
-    });
-</script>
-
-<script>
-    $(document).ready(function() {
-        var tableKondisi = $('#tableKondisi').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '<?= site_url("api/kondisi-fasilitas") ?>',
-                type: 'GET',
-            },
-            columns: [
-                { data: null, orderable: false, searchable: false },
-                { data: null, render: function(data, type, row) {
-                    return `<span class="badge rounded-pill bg-primary">${row.kode_fasilitas} - ${row.jenis}</span>`;
-                }},
-                { data: 'nama_fasilitas'},
-                { data: null, render: function(data, type, row) {
-                    return `lat: ${row.latitude} <br> long: ${row.longitude}`;
-                }},
-                { data: null, render: function(data, type, row) {
-                    return row.kondisi =='baik' ? `<span class="badge rounded-pill bg-success">${row.kondisi}</span>` : row.kondisi == 'rusak_ringan' ? `<span class="badge rounded-pill bg-warning">${row.kondisi}</span>` : `<span class="badge rounded-pill bg-danger">${row.kondisi}</span>`;
-                }},
-                { data: null, render: function(data, type, row) {
-                    return row.tahun_survey;
-                }},
-                {
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    render: function(data, type, row) {
-                        return `<button class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="View Detail" onclick="viewDetail('${row.id}')"><i class="fas fa-pencil-alt"></i></button>`;
-                    }
-                }
-            ],  
-            drawCallback: function(settings) {
-                var api = this.api();
-                api.column(0).nodes().each(function(cell, i) {
-                    cell.innerHTML = i + 1 + api.context[0]._iDisplayStart;
-                });
-                // Initialize tooltips
-                $('[data-bs-toggle="tooltip"]').tooltip();
-            },
-            initComplete: function() {
-                // Initialize tooltips setelah table loaded
-                $('[data-bs-toggle="tooltip"]').tooltip();
-            }
-        });
-
-        $('#kondisi').on('change', function () {
-            let val = $(this).val();
-            $('#tableKondisi').DataTable().column(4).search(val).draw(); // Array Kolom ke-4 = "Kondisi"
-        });
-    });
-
-    var mapDetail = L.map('mapDetail').setView([-8.6529, 117.3616], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapDetail);
-    function viewDetail(id)
-    {
-        var url = "<?= site_url('api/fasilitas/') ?>" + id;
-        $.ajax({
-            url: url,
-            type: "GET",
-            dataType: "JSON",
-            beforeSend: () => {
-                Swal.fire({
-                    title: 'Loading..',
-                    html: 'Menampilkan Data',
-                    timerProgressBar: true,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    }
-                });
-            },
-            success: (response) => {
-                Swal.close();
-                if (response.success) {
-                    const data = response.data[0];
-                    $('#kode_fasilitas').val(`${data.kode_fasilitas} - ${data.jenis}`);
-                    $('#nama_fasilitas').val(data.nama_fasilitas);
-                    $('#tahun_survey').val(data.tahun_survey);
-                    $('#catatan').val(data.catatan);
-                    $('#latitude').val(data.latitude);
-                    $('#longitude').val(data.longitude);
-                    let fotoPreviewHTML = '';
-                    let fotos = JSON.parse(data.foto);
-                    if (fotos) {
-                        fotos.forEach(foto => {
-                            fotoPreviewHTML += `<img onclick="previewFoto('<?= base_url('uploads/images/fasilitas/') ?>${data.tahun_survey}/${foto}', '${data.nama_fasilitas}')" src="<?= base_url('uploads/images/fasilitas/') ?>${data.tahun_survey}/${foto}" class="img-thumbnail" style="width: 100px; height: 100px; margin-right: 10px;">`;
-                        });
-                    }
-                    $('#foto_container').html(fotoPreviewHTML);
-                    
-                    // Peta
-                    var icon = L.divIcon({
-                        className: "custom-marker",
-                        html: `<div class="dot" style="background:${getColorByJenis(data.jenis)};"></div>`,
-                        iconSize: [18, 18],
-                        iconAnchor: [9, 9]
-                    });
-
-                    // hapus marker lama biar tidak numpuk
-                    if (typeof marker !== 'undefined') {
-                        mapDetail.removeLayer(marker);
-                    }
-
-                    marker = L.marker([data.latitude, data.longitude], {icon: icon} ).addTo(mapDetail);
-                    mapDetail.flyTo([data.latitude, data.longitude], 14);
-                    
-                    $('#detailModal').modal('show');
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.data
-                    });
-                }
-            },
-            error: (err) => {
-                console.log(err);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: err.responseText
-                });
-            }
-        })
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
+<script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
+<style>
+    #map {
+        border-radius: 0.375rem;
+        z-index: 1;
+    }
+    
+    /* Pastikan peta responsive */
+    .leaflet-container {
+        height: 100%;
+        width: 100%;
     }
 
-    $('#detailModal').on('shown.bs.modal', function () {
-        mapDetail.invalidateSize();
-    });
-
-
-
-    function initKondisiChart(data) {
-        Highcharts.chart('kondisiChartContainer', {
-            chart: {
-                type: 'pie',
-                backgroundColor: '#f8f9fa',
-                borderRadius: 10
-            },
-            title: {
-                text: 'Kondisi Rambu Lalu Lintas',
-                style: {
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    color: '#333'
-                }
-            },
-            // subtitle: {
-            //     text: 'Data kondisi rambu berdasarkan tingkat kerusakan',
-            //     style: {
-            //         color: '#666'
-            //     }
-            // },
-            tooltip: {
-                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-            },
-            accessibility: {
-                point: {
-                    valueSuffix: '%'
-                }
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: false,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: false,
-                        format: '<b>{point.name}</b>: {point.y}%',
-                        style: {
-                            fontSize: '12px'
-                        }
-                    },
-                    showInLegend: true
-                }
-            },
-            series: [{
-                name: 'Kondisi',
-                colorByPoint: true,
-                data: data
-            }],
-            credits: {
-                enabled: false
-            }
-        });
+    #kondisiChartContainer {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-</script>
+
+    .highcharts-legend-item text {
+        font-size: 14px !important;
+        font-weight: 600;
+    }
+
+    .highcharts-data-label {
+        font-weight: bold !important;
+    }
+</style>
 
 <!-- points marker css -->
 <style>
