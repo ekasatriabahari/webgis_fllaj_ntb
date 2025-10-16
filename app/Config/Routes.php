@@ -35,6 +35,9 @@ $routes->get('/profile', 'UsersController::profile', ['filter' => 'auth']);
 /* Database */
 $routes->get('/database', 'DatabaseController::index', ['filter' => 'auth']);
 
+/* Laporan */
+$routes->get('/laporan', 'LaporanController::index', ['filter' => 'auth']);
+
 /* APIs */
 // grup api publik
 $routes->group('api', function ($routes) {
@@ -46,6 +49,11 @@ $routes->group('api', function ($routes) {
     /* Fasilitas */
     $routes->group('fasilitas', function ($routes){
         $routes->get('(:num)', 'FasilitasController::getDetail/$1');
+    });
+
+    /* Rencana */
+    $routes->group('rencana', function ($routes){
+        $routes->get('/', 'RencanaController::getAll');
     });
     
     /* Dashboard */
@@ -79,7 +87,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
 
     /* Rencana */
     $routes->group('rencana', function ($routes) {
-        $routes->get('/', 'RencanaController::getAll');
+        // $routes->get('/', 'RencanaController::getAll'); /* move to public API  */
         $routes->post('/', 'RencanaController::addData');
         $routes->get('(:num)', 'RencanaController::detail/$1');
         $routes->put('(:num)', 'RencanaController::updateData/$1');
@@ -94,6 +102,13 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
         $routes->put('(:num)', 'UsersController::updateData/$1');
         $routes->delete('(:num)', 'UsersController::deleteData/$1');
         $routes->post('reset-password', 'UsersController::resetPassword');
+    });
+
+    /* Database */
+    $routes->group('database', function ($routes) {
+        $routes->post('import', 'DatabaseController::import');
+        $routes->post('backup', 'DatabaseController::backup');
+        $routes->get('logs', 'DatabaseController::logs');
     });
 
 });

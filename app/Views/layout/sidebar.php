@@ -174,7 +174,7 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="<?= base_url() ?>/reports" class="nav-link">
+                    <a href="<?= site_url() ?>/laporan" class="nav-link">
                         <span class="sidebar-icon"><i class="fas fa-briefcase me-2"></i></span>
                         <span class="sidebar-text">Laporan</span>
                     </a>

@@ -68,7 +68,7 @@
 <script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
 <script>
     // Inisialisasi peta
-    var map = L.map('map').setView([-8.6529, 117.3616], 8);
+    var map = L.map('map').setView([-8.6529, 117.3616], 9);
 
     // --- Base Layer ---
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -94,6 +94,8 @@
         jalanProvinsiGeoJSON = shpJalan.toGeoJSON();
         console.log( jalanProvinsiGeoJSON );
     });
+
+    shpJalan.addTo(map);
 
     // --- Scale control ---
     L.control.scale().addTo(map);
@@ -129,9 +131,9 @@
             Shapefile Jalan
             </button>
         </h2>
-        <div id="collapseJalan" class="accordion-collapse collapse">
+        <div id="collapseJalan" class="accordion-collapse collapse show">
             <div class="accordion-body py-2 px-2">
-            <label class="d-block mb-1"><input type="checkbox" class="overlay" value="jalan"> Jalan Provinsi NTB</label>
+            <label class="d-block mb-1"><input type="checkbox" class="overlay" value="jalan" checked> Jalan Provinsi NTB</label>
             </div>
         </div>
         </div>
@@ -155,7 +157,7 @@
             Data Fasilitas
             </button>
         </h2>
-        <div id="collapseFasilitas" class="accordion-collapse collapse">
+        <div id="collapseFasilitas" class="accordion-collapse collapse show">
             <div class="accordion-body py-2 px-2" id="fasilitas-groups"></div>
         </div>
         </div>
@@ -166,7 +168,7 @@
                 Data Rencana
                 </button>
             </h2>
-            <div id="collapseRencana" class="accordion-collapse collapse">
+            <div id="collapseRencana" class="accordion-collapse collapse show">
                 <div class="accordion-body py-2 px-2" id="rencana-groups"></div>
             </div>
         </div>
@@ -296,7 +298,7 @@
 
         window.legendControl.onAdd = function () {
             const div = L.DomUtil.create('div', 'info legend');
-            div.innerHTML = '<h6>📍 Legend</h6>';
+            div.innerHTML = '<h6>📍 Fasilitas</h6>';
 
             // --- Fasilitas ---
             const jenisSet = new Set();
@@ -307,6 +309,7 @@
                         const iconUrl = j.icon ? '<?= base_url('uploads/icons/') ?>' + j.icon : null;
                         const markerHTML = iconUrl
                             ? `<img src="${iconUrl}" style="width:20px;height:20px;vertical-align:middle;">`
+                            : group.nama_kode ? `<span class="legend-dot" style="background:${getColorByJenis(group.nama_kode)}"></span>` 
                             : `<span class="legend-dot" style="background:${j.marker_color || '#999'}"></span>`;
                         div.innerHTML += `<div class="legend-item">${markerHTML} ${j.nama_jenis}</div>`;
                     }
@@ -317,15 +320,18 @@
             if (rencanaData && rencanaData.length > 0) {
                 div.innerHTML += `<hr><h6>🗺️ Rencana</h6>`;
                 const rencanaSet = new Set();
-                rencanaData.forEach(item => {
-                    if (!rencanaSet.has(item.jenis_rencana)) {
-                        rencanaSet.add(item.jenis_rencana);
-                        const iconUrl = item.icon ? '<?= base_url('uploads/icons/') ?>' + item.icon : null;
-                        const markerHTML = iconUrl
-                            ? `<img src="${iconUrl}" style="width:20px;height:20px;vertical-align:middle;">`
-                            : `<span class="legend-dot" style="background:${item.marker_color || '#007bff'}"></span>`;
-                        div.innerHTML += `<div class="legend-item">${markerHTML} ${item.jenis_rencana}</div>`;
-                    }
+                rencanaData.forEach(group => {
+                    group.jenis.forEach(j => {
+                        if (!rencanaSet.has(j.nama_jenis)) {
+                            rencanaSet.add(j.nama_jenis);
+                            const iconUrl = j.icon ? '<?= base_url('uploads/icons/') ?>' + j.icon : null;
+                            const markerHTML = iconUrl
+                                ? `<img src="${iconUrl}" style="width:20px;height:20px;vertical-align:middle;">`
+                                : group.nama_kode ? `<span class="legend-dot" style="background:${getColorByJenis(group.nama_kode)}"></span>` 
+                                : `<span class="legend-dot" style="background:${j.marker_color || '#999'}"></span>`;
+                            div.innerHTML += `<div class="legend-item">${markerHTML} ${j.nama_jenis}</div>`;
+                        }
+                    });
                 });
             }
 
@@ -391,7 +397,7 @@
                         nearestRoadName = f.properties.Nm_Ruas || "Tanpa nama";
                     }
                 } catch (err) {
-                    console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
+                    // console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
                 }
             });
         });
@@ -404,7 +410,16 @@
             url: "<?= site_url('api/dashboard/markers') ?>",
             type: 'GET',
             dataType: 'json',
+            beforeSend: () => {
+                Swal.fire({
+                    title: 'Memuat Data Peta...',
+                    html: 'Mohon tunggu, sedang memuat fasilitas dan shapefile jalan',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            },
             success: function(response) {
+                Swal.close();
                 const fasilitasData = response.data.fasilitas || [];
                 const rencanaData = response.data.rencana || [];
 
@@ -431,7 +446,7 @@
 
                         // Checkbox per jenis fasilitas
                         let checkbox = document.createElement('label');
-                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-fasilitas"> ${j.nama_jenis}<br>`;
+                        checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-fasilitas" checked> ${j.nama_jenis}<br>`;
                         kodeContainer.appendChild(checkbox);
 
                         // Marker per data
@@ -458,6 +473,15 @@
                                 .bindPopup(markerPopup({ ...item, jenis: j.nama_jenis, tahun: item.tahun_survey, catatan: item.catatan }));
                         });
                     });
+                });
+
+                $('#fasilitas-groups .cb-fasilitas').each(function() {
+                    $(this).prop('checked', true);
+                    let kode = this.dataset.kode;
+                    let jenis = this.dataset.jenis;
+                    if (fasilitasGroups[kode] && fasilitasGroups[kode][jenis]) {
+                        map.addLayer(fasilitasGroups[kode][jenis]);
+                    }
                 });
 
                 // Checkbox event fasilitas
@@ -487,7 +511,7 @@
 
                             // Checkbox per jenis rencana
                             let checkbox = document.createElement('label');
-                            checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-rencana"> ${j.nama_jenis}<br>`;
+                            checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-rencana" checked> ${j.nama_jenis}<br>`;
                             kodeContainer.appendChild(checkbox);
 
                             // Marker per data
@@ -514,6 +538,15 @@
                                     .bindPopup(markerPopup({ ...item, jenis: j.nama_jenis, tahun: item.tahun_survey, catatan: item.catatan }));
                             });
                         });
+                    });
+
+                    $('#rencana-groups .cb-rencana').each(function() {
+                        $(this).prop('checked', true);
+                        let kode = this.dataset.kode;
+                        let jenis = this.dataset.jenis;
+                        if (rencanaGroups[kode] && rencanaGroups[kode][jenis]) {
+                            map.addLayer(rencanaGroups[kode][jenis]);
+                        }
                     });
 
                     // Checkbox event rencana

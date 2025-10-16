@@ -22,7 +22,7 @@
                         </button>
                     </li>
                 </ul>
-
+                <hr>
                 <!-- Tab Content -->
                 <div class="tab-content" id="pills-tabContent">
                     <div class="tab-pane fade show active" id="importKMZ" role="tabpanel" aria-labelledby="import-tab">
