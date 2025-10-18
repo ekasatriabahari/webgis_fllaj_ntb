@@ -99,6 +99,10 @@ class ImportFasilitasController extends BaseController
                     'tahun_survey'       => $tahun,
                     'catatan'            => $item['catatan'] ?? '',
                     'foto'               => json_encode($uploadedNames),
+                    'nama_ruas'          => $item['nama_ruas'] ?? null,
+                    'kelurahan'          => $item['kelurahan'] ?? null,
+                    'kecamatan'          => $item['kecamatan'] ?? null,
+                    'kab_kota'           => $item['kab_kota'] ?? null,
                     'created_at'         => $item['created_at'] ?? date('Y-m-d H:i:s')
                 ];
 

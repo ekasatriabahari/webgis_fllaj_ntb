@@ -1,3 +1,4 @@
+<script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
 <!-- Form Upload -->
 <div class="mb-3" id="importKMZ">
     <label for="kmlFile" class="form-label fw-bold">Pilih Folder KMZ</label>
@@ -47,7 +48,7 @@
                 "rusak", "tidak ada"
             ];
 
-            const rencanaKeywords = ["usulan", "rencana", "pengadaan"];
+            const rencanaKeywords = ["usulan", "rencana", "pengadaan", "perlu", "penambahan", "perbaikan"];
 
             function deteksiKondisi(desc) {
                 const text = (desc || "").toLowerCase();
@@ -69,7 +70,7 @@
                 { kategori: "Rambu", jenis: "Rambu Larangan", keys: ["rambu larangan","larangan","dilarang","no entry","stop","no parkir","no parking","no u-turn","no right turn","no left turn","rambu stop","rambu dilarang", "plang dilarang", "plang larangan"] },
                 { kategori: "Rambu", jenis: "Rambu Perintah", keys: ["rambu perintah","wajib","belok kanan wajib","belok kiri wajib","gunakan helm","gunakan lajur kiri","nyalakan lampu","wajib belok","perintah", "plang perintah", "terus", "lurus", "harus", "gunakan"] },
                 { kategori: "Rambu", jenis: "Rambu Peringatan", keys: ["rambu peringatan","hati-hati","waspada","tanjakan","turunan","rawan","rambu kuning","penyempitan","licin","bergelombang","anak sekolah","hewan","rambu tikungan","menanjak","menurun","jalan rusak", "plang peringatan", "hati", "plang pejalan"] },
-                { kategori: "Rambu", jenis: "Rambu Petunjuk", keys: ["rambu petunjuk","petunjuk","arah","tujuan","nama jalan","belok kiri","belok kanan","jarak","km","terminal","bandara","pelabuhan","hotel","wisata", "orang", "plang jalan", "plang jl", "plang petunjuk", "jam", "kilometer", "belok", "putar", "bundaran", "rambu tafficlight", "plang traffic", "rambu lampu", "plang rambu", "tikungan", "informasi", "plang zebra"] },
+                { kategori: "Rambu", jenis: "Rambu Petunjuk", keys: ["rambu petunjuk","petunjuk","arah","tujuan","nama jalan","belok kiri","belok kanan","jarak","km","terminal","bandara","pelabuhan","hotel","wisata", "orang", "plang jalan", "plang jl", "plang petunjuk", "jam", "kilometer", "belok", "putar", "bundaran", "rambu tafficlight", "plang traffic", "rambu lampu", "plang rambu", "tikungan", "informasi", "plang zebra", "simpang", "perempatan", "pertigaan", "masjid", "spbu", "pombensin"] },
                 { kategori: "Rambu", jenis: "Rambu Tambahan", keys: ["rambu tambahan","tambahan","angka jarak","keterangan","plang tambahan","keterangan waktu"] },
                 { kategori: "Marka", jenis: "Marka Membujur", keys: ["marka membujur","garis tengah","as jalan","garis as","garis putus","garis kuning","pembatas jalan","lajur","marka tengah"] },
                 { kategori: "Marka", jenis: "Marka Melintang", keys: ["marka melintang","stop line","garis berhenti","marka berhenti","henti","melintang"] },
@@ -134,6 +135,11 @@
                     return;
                 }
 
+                // 🔹 Load file GeoJSON ruas jalan provinsi 
+                const jalanProvinsi = await fetch("<?= base_url('assets/others/JALAN_PROVINSI.geojson'); ?>") .then(res => res.json()) .catch(() => { alert("❌ Gagal memuat data JALAN_PROVINSI.geojson"); return null; }); 
+                
+                if (!jalanProvinsi) return;
+
                 const reader = new FileReader();
                 reader.onload = async function (e) {
                     try {
@@ -149,6 +155,13 @@
                             const tgl = new Date(props.timestamp || Date.now());
                             const createdAt = `${tgl.getFullYear()}-${String(tgl.getMonth()+1).padStart(2,'0')}-${String(tgl.getDate()).padStart(2,'0')} ${String(tgl.getHours()).padStart(2,'0')}:${String(tgl.getMinutes()).padStart(2,'0')}:${String(tgl.getSeconds()).padStart(2,'0')}`;
                             const tahunSurvey = tgl.getFullYear();
+
+                            const lat = parseFloat(coords[1]); 
+                            const lng = parseFloat(coords[0]); 
+                            if (isNaN(lat) || isNaN(lng)) return null;
+                            
+                            // 🌍 Cari ruas jalan terdekat 
+                            let nearest = getNearestRoad(lat, lng, jalanProvinsi);
 
                             const photos = [];
                             if (props.pdfmaps_photos) {
@@ -174,6 +187,10 @@
                                 tahun_survey: tahunSurvey,
                                 foto: photos,
                                 catatan: props.Description || "",
+                                nama_ruas: nearest?.Nm_Ruas || null, 
+                                kelurahan: nearest?.Desa_kel || null, 
+                                kecamatan: nearest?.Kecamatan || null, 
+                                kab_kota: nearest?.Kab_Kot || null,
                                 created_at: createdAt
                             };
                         });
@@ -234,6 +251,74 @@
                 reader.readAsText(kmlFile);
             });
 
+            function getNearestRoad(lat, lng, jalanProvinsiGeoJSON) {
+                // Pastikan koordinat valid
+                lat = parseFloat(lat);
+                lng = parseFloat(lng);
+                if (isNaN(lat) || isNaN(lng)) {
+                    console.warn("⚠️ Koordinat tidak valid:", lat, lng);
+                    return null;
+                }
+
+                const point = turf.point([lng, lat]);
+                let nearestRoad = {
+                    Nm_Ruas: "Tidak diketahui",
+                    Desa_kel: "-",
+                    Kecamatan: "-",
+                    Kab_Kot: "-",
+                    minDistance: Infinity
+                };
+
+                jalanProvinsiGeoJSON.features.forEach((f, idx) => {
+                    if (!f.geometry || !f.geometry.coordinates) return;
+
+                    let segments = [];
+
+                    // 🔹 Deteksi tipe geometry
+                    if (f.geometry.type === "LineString") {
+                        segments = [f.geometry.coordinates];
+                    } else if (f.geometry.type === "MultiLineString") {
+                        segments = f.geometry.coordinates;
+                    } else {
+                        console.warn(`⚠️ Geometry tipe ${f.geometry.type} di-skip (fitur ke-${idx})`);
+                        return;
+                    }
+
+                    // 🔹 Loop setiap ruas garis
+                    segments.forEach((coords, i) => {
+                        try {
+                            // Validasi: pastikan semua elemen koordinat numerik
+                            if (
+                                !Array.isArray(coords) ||
+                                coords.length === 0 ||
+                                !coords.every(c => Array.isArray(c) && c.length === 2 &&
+                                    typeof c[0] === "number" && typeof c[1] === "number")
+                            ) {
+                                console.warn(`⚠️ Koordinat tidak valid pada segmen ke-${i} fitur ${idx}`);
+                                return;
+                            }
+
+                            const line = turf.lineString(coords);
+                            const snapped = turf.nearestPointOnLine(line, point, { units: "meters" });
+                            const dist = snapped.properties.dist;
+
+                            if (dist < nearestRoad.minDistance) {
+                                nearestRoad = {
+                                    Nm_Ruas: f.properties?.Nm_Ruas || "Tanpa nama",
+                                    Desa_kel: f.properties?.Desa_Kel || "-",
+                                    Kecamatan: f.properties?.Kecamatan || "-",
+                                    Kab_Kot: f.properties?.Kab_Kot || "-",
+                                    minDistance: dist
+                                };
+                            }
+                        } catch (err) {
+                            console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
+                        }
+                    });
+                });
+
+                return nearestRoad;
+            }
 
         });
 </script>

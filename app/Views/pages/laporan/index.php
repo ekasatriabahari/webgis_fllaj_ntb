@@ -9,12 +9,12 @@
                 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="fasilitas-tab" data-bs-toggle="pill" data-bs-target="#lapFasilitas" type="button" role="tab" aria-controls="lapFasilitas" aria-selected="true">
-                            <i class="fas fa-report-medical"></i> Laporan Fasilitas
+                            <i class="far fa-folder"></i> Laporan Fasilitas
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                            <button class="nav-link" id="rencana-tab" data-bs-toggle="pill" data-bs-target="#lapRencana" type="button" role="tab" aria-controls="lapRencana" aria-selected="false">
-                            <i class="fas fa-copy"></i> Laporan Rencana
+                            <i class="far fa-folder-open"></i> Laporan Rencana
                         </button>
                     </li>
                 </ul>
