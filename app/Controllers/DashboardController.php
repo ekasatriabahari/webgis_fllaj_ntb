@@ -68,6 +68,7 @@ class DashboardController extends BaseController
                     'catatan' => $row['catatan'],
                     'tahun_survey' => $row['tahun_survey'],
                     'foto' => $row['foto'],
+                    'lokasi' => $row['nama_ruas'] . ', ' . $row['kelurahan'] . ', ' . $row['kecamatan'] . ', ' . $row['kab_kota'],
                 ];
             }
         }
@@ -112,6 +113,7 @@ class DashboardController extends BaseController
                     'catatan' => $row['catatan'],
                     'tahun_survey' => $row['tahun_survey'],
                     'foto' => $row['foto'],
+                    'lokasi' => $row['nama_ruas'] . ', ' . $row['kelurahan'] . ', ' . $row['kecamatan'] . ', ' . $row['kab_kota'],
                 ];
             }
         }

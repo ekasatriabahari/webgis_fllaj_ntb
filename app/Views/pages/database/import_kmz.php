@@ -45,7 +45,7 @@
                 "lampu padam sebagian","retak","berdebu","kusam","longgar","pudar","berkarat",
                 "rambu terhalang","marka pudar","guardrail miring","tiang miring","kamera buram",
                 "lensa kotor","lampu goyang","cover retak","cat mengelupas","tiang condong", 
-                "rusak", "tidak ada"
+                "rusak", "tidak ada", "buram"
             ];
 
             const rencanaKeywords = ["usulan", "rencana", "pengadaan", "perlu", "penambahan", "perbaikan"];
