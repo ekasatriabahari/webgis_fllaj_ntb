@@ -102,9 +102,9 @@ class DatabaseController extends BaseController
     public function import()
     {
         $file = $this->request->getFile('importFile');
-        // if (!$file->isValid() || strtolower($file->getExtension()) !== 'sql') {
-        //     return $this->response->setStatusCode(400)->setJSON(['error' => 'File tidak valid. Harus file .sql']);
-        // }
+        if (!$file) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'File tidak valid. Harus file .sql']);
+        }
 
         $tmpPath = WRITEPATH . 'uploads/';
         if (!is_dir($tmpPath)) mkdir($tmpPath, 0777, true);
@@ -116,21 +116,35 @@ class DatabaseController extends BaseController
         $sql = file_get_contents($filePath);
         $queries = preg_split('/;\s*[\r\n]+/', $sql);
 
+        $errors = [];
         $this->db->transStart();
+        $count = 0;
+
         foreach ($queries as $query) {
             $query = trim($query);
-            if ($query !== '' && !str_starts_with($query, '--')) {
+            if ($query !== '' && substr($query, 0, 2) !== '--') {
                 try {
                     $this->db->query($query);
+                    $count++;
                 } catch (\Throwable $e) {
+                    $errors[] = [
+                        'query' => $query,
+                        'message' => $e->getMessage(),
+                    ];
                     log_message('error', 'SQL import error: ' . $e->getMessage());
                 }
             }
         }
+
         $this->db->transComplete();
 
-        if ($this->db->transStatus() === false) {
-            return $this->response->setStatusCode(500)->setJSON(['error' => 'Import gagal. Ada query tidak valid.']);
+        @unlink($filePath);
+
+        if (!empty($errors)) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'error' => 'Import gagal. Ada query tidak valid.',
+                'details' => $errors,
+            ]);
         }
 
         // Simpan log
@@ -142,10 +156,12 @@ class DatabaseController extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        @unlink($filePath);
-
-        return $this->response->setJSON(['success' => true]);
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => "Import berhasil ($count query dieksekusi)."
+        ]);
     }
+
 
     // =====================================
     // === GET LOG DATABASE HISTORY (JSON) ==

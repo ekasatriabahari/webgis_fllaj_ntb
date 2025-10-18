@@ -27,22 +27,24 @@
 
     <div id="backupDBLog">
         <h6 class="fw-bold mb-2">Log Aktivitas Database</h6>
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>No</th>
-                    <th>Tipe</th>
-                    <th>Nama File</th>
-                    <th>Catatan</th>
-                    <th>Dibuat Oleh</th>
-                    <th>Tanggal</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="logTableBody">
-                <tr><td colspan="7" class="text-center text-muted">Belum ada log</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>No</th>
+                        <th>Tipe</th>
+                        <th>Nama File</th>
+                        <th>Catatan</th>
+                        <th>Dibuat Oleh</th>
+                        <th>Tanggal</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                    <tr><td colspan="7" class="text-center text-muted">Belum ada log</td></tr>
+                </tbody>
+            </table>
+        </div>        
     </div>
 </div>
 <script>
@@ -96,11 +98,11 @@
                         data: formData,
                         processData: false,
                         contentType: false,
-                        success: function() {
+                        success: function(response) {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success',
-                                text: 'Import berhasil!'
+                                html: `<p>Database berhasil diimport!</p><p><pre>${response.message}</pre></p>`
                             }).then(() => loadLog());
                         },
                         error: function() {
@@ -126,7 +128,7 @@
                         rows += `
                             <tr>
                                 <td>${i + 1}</td>
-                                <td>${log.type}</td>
+                                <td>${log.type == 'import' ? "<span class='badge bg-success'>Import</span>" : "<span class='badge bg-primary'>Backup</span>" }</td>
                                 <td>${log.filename ?? '-'}</td>
                                 <td>${log.notes ?? '-'}</td>
                                 <td>${log.created_by ?? '-'}</td>
