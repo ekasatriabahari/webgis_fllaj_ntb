@@ -15,6 +15,7 @@
 
 <button id="convertBtn" class="btn btn-primary">
     <i class="bi bi-filetype-json"></i> Konversi & Import
+    <span id="loader"></span>
 </button>
 
 <hr>
@@ -223,8 +224,11 @@
                                     method: "POST",
                                     data: formData,
                                     processData: false,
-                                    contentType: false
+                                    contentType: false,
                                 });
+
+                                // set loader on button
+                                $('#loader').html('<i class="fas fa-spinner fa-spin"></i>');
 
                                 const percent = Math.round((current / total) * 100);
                                 progressBar.css("width", percent + "%");
@@ -244,6 +248,7 @@
 
                         progressBar.css("background", "#28a745");
                         progressText.text("✅ Selesai semua");
+                        $('#loader').empty();
                     } catch (err) {
                         output.html(`<span style='color:red;'>❌ Terjadi kesalahan: ${err.message}</span>`);
                     }
