@@ -79,22 +79,24 @@
             <!-- table fasilitas -->
              <div class="row">
                 <div class="col-12">
-                    <table class="table table-bordered table-striped" id="tableFasilitas">
-                        <thead>
-                            <tr>
-                                <th width="5%">No</th>
-                                <th width="15%">Kode Fasilitas</th> <!-- tampilkan kode dan jenis fasilitas cth : RMB - Rambu Larangan -->
-                                <th>Nama Fasilitas</th>
-                                <th>Lokasi Koordinat</th>
-                                <th width="10%">Kondisi</th>
-                                <th width="5%">Tahun Survey</th>
-                                <th>#</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- load via ajax -->
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tableFasilitas">
+                            <thead>
+                                <tr>
+                                    <th width="5%">No</th>
+                                    <th width="15%">Kode Fasilitas</th> <!-- tampilkan kode dan jenis fasilitas cth : RMB - Rambu Larangan -->
+                                    <th>Nama Fasilitas</th>
+                                    <th>Lokasi Koordinat</th>
+                                    <th width="10%">Kondisi</th>
+                                    <th width="5%">Tahun Survey</th>
+                                    <th>#</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- load via ajax -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
              </div>
         </div>
