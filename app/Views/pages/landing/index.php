@@ -791,7 +791,7 @@
         `).join('');
 
         // 🔍 Tambahkan pencarian ruas jalan
-        const jalan = getNearestRoad(data.latitude, data.longitude);
+        // const jalan = getNearestRoad(data.latitude, data.longitude);
         // const jalan =""
 
         return `
@@ -802,7 +802,7 @@
                     </h6>
                     <p class="mb-1"><b>Nama:</b> ${data.nama_fasilitas}</p>
                     <p class="mb-1"><b>Kondisi:</b> ${data.kondisi ? data.kondisi.replace('_',' ') : 'Rencana'}</p>
-                    <p class="mb-1"><b>Jalan:</b>${jalan}</p>
+                    <p class="mb-1"><b>Jalan:</b>${data.lokasi}</p>
                     <p class="mb-1"><b>Lat:</b> ${data.latitude}<br>
                     <b>Lng:</b> ${data.longitude}</p>
                     <p><b>Catatan:</b> ${data.catatan}</p>

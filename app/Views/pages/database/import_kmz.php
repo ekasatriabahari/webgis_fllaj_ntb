@@ -68,7 +68,7 @@
             // 2️⃣ DETEKSI JENIS FASILITAS
             // ============================
             const jenisFasilitasKeywords = [
-                { kategori: "Rambu", jenis: "Rambu Larangan", keys: ["rambu larangan","larangan","dilarang","no entry","stop","no parkir","no parking","no u-turn","no right turn","no left turn","rambu stop","rambu dilarang", "plang dilarang", "plang larangan"] },
+                { kategori: "Rambu", jenis: "Rambu Larangan", keys: ["rambu larangan","larangan","dilarang","no entry","stop","no parkir","no parking","no u-turn","no right turn","no left turn","rambu stop","rambu dilarang", "plang dilarang", "plang larangan", "larang"] },
                 { kategori: "Rambu", jenis: "Rambu Perintah", keys: ["rambu perintah","wajib","belok kanan wajib","belok kiri wajib","gunakan helm","gunakan lajur kiri","nyalakan lampu","wajib belok","perintah", "plang perintah", "terus", "lurus", "harus", "gunakan"] },
                 { kategori: "Rambu", jenis: "Rambu Peringatan", keys: ["rambu peringatan","hati-hati","waspada","tanjakan","turunan","rawan","rambu kuning","penyempitan","licin","bergelombang","anak sekolah","hewan","rambu tikungan","menanjak","menurun","jalan rusak", "plang peringatan", "hati", "plang pejalan"] },
                 { kategori: "Rambu", jenis: "Rambu Petunjuk", keys: ["rambu petunjuk","petunjuk","arah","tujuan","nama jalan","belok kiri","belok kanan","jarak","km","terminal","bandara","pelabuhan","hotel","wisata", "orang", "plang jalan", "plang jl", "plang petunjuk", "jam", "kilometer", "belok", "putar", "bundaran", "rambu tafficlight", "plang traffic", "rambu lampu", "plang rambu", "tikungan", "informasi", "plang zebra", "simpang", "perempatan", "pertigaan", "masjid", "spbu", "pombensin"] },
@@ -84,7 +84,7 @@
                 { kategori: "Penanda Jalan", jenis: "Patok Kilometer", keys: ["patok km","km","kilometer","penanda km","patok jarak","batu km","tugu km"] },
                 { kategori: "Penanda Jalan", jenis: "Patok Pengarah", keys: ["patok pengarah","patok batas","patok tikungan","patok jalan"] },
                 { kategori: "Penanda Jalan", jenis: "Pita Penggaduh", keys: ["pita penggaduh","rumble strip","pita getar","marka getar","pita jalan"] },
-                { kategori: "Penerangan", jenis: "Lampu PJU", keys: ["pju","lampu jalan","lampu pju","lampu umum","lampu penerangan","lampu tiang"] },
+                { kategori: "Penerangan", jenis: "Lampu PJU", keys: ["pju","lampu jalan","lampu pju","lampu umum","lampu penerangan","lampu tiang", "lampu"] },
                 { kategori: "Penerangan", jenis: "Lampu PJU Tenaga Surya", keys: ["pju solar","solar","tenaga surya","solar cell","lampu surya","pju tenaga surya","lampu solar"] },
                 { kategori: "Penerangan", jenis: "Lampu Traffic Light", keys: ["traffic light","lampu merah","lampu simpang","lampu lalu lintas","lampu pengatur", "trafficlight"] },
                 { kategori: "Pemelandai", jenis: "Speed Bump", keys: ["bump","speed bump","polisi tidur","gundukan","gundukan kecil"] },
@@ -138,6 +138,7 @@
 
                 // 🔹 Load file GeoJSON ruas jalan provinsi 
                 const jalanProvinsi = await fetch("<?= base_url('assets/others/JALAN_PROVINSI.geojson'); ?>") .then(res => res.json()) .catch(() => { alert("❌ Gagal memuat data JALAN_PROVINSI.geojson"); return null; }); 
+                const jalanLayerProvinsi = L.geoJSON(jalanProvinsi);
                 
                 if (!jalanProvinsi) return;
 
@@ -317,7 +318,7 @@
                                 };
                             }
                         } catch (err) {
-                            console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
+                            // console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
                         }
                     });
                 });
