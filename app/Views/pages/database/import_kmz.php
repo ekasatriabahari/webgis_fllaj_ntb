@@ -138,7 +138,6 @@
 
                 // 🔹 Load file GeoJSON ruas jalan provinsi 
                 const jalanProvinsi = await fetch("<?= base_url('assets/others/JALAN_PROVINSI.geojson'); ?>") .then(res => res.json()) .catch(() => { alert("❌ Gagal memuat data JALAN_PROVINSI.geojson"); return null; }); 
-                const jalanLayerProvinsi = L.geoJSON(jalanProvinsi);
                 
                 if (!jalanProvinsi) return;
 
