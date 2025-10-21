@@ -62,6 +62,12 @@ $routes->group('api', function ($routes) {
     });
 
     $routes->get('kondisi-fasilitas', 'LandingController::kondisiFasilitas');
+
+    /* Charts */
+    $routes->group('charts', function ($routes) {
+        $routes->get('kondisi', 'ChartsController::kondisi');
+        $routes->get('eksisting-rencana', 'ChartsController::eksistingRencana');
+    });
 });
 
 // grup api private
