@@ -5,28 +5,30 @@
                 <h5><i class="fas fa-table"></i> Tabel Fasilitas</h5>
             </div>
             <div class="card-body">
-                <table id="tableKondisi" class="table table-striped table-bordered" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th width="5%">No</th>
-                            <th>Kode Fasilitas</th>
-                            <th>Nama Fasilitas</th>
-                            <th>Koordinat</th>
-                            <th>
-                                <select name="kondisi" id="kondisi" class="form-control">
-                                    <option value="">Semua Kondisi</option>
-                                    <option value="baik">Baik</option>
-                                    <option value="rusak_ringan">Rusak Ringan</option>
-                                    <option value="rusak_berat">Rusak Berat</option>
-                                </select>
-                            </th>
-                            <th>Tahun Survey</th>
-                            <th>Detail</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="tableKondisi" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th width="5%">No</th>
+                                <th>Kode Fasilitas</th>
+                                <th>Nama Fasilitas</th>
+                                <th>Koordinat</th>
+                                <th>
+                                    <select name="kondisi" id="kondisi" class="form-control">
+                                        <option value="">Semua Kondisi</option>
+                                        <option value="baik">Baik</option>
+                                        <option value="rusak_ringan">Rusak Ringan</option>
+                                        <option value="rusak_berat">Rusak Berat</option>
+                                    </select>
+                                </th>
+                                <th>Tahun Survey</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

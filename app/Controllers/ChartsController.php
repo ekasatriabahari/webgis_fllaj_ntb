@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Database;
 
 class ChartsController extends BaseController
 {
@@ -51,13 +52,13 @@ class ChartsController extends BaseController
 
         if ($total == 0) {
             $data = [
-                ['name' => 'Realisasi', 'y' => 0],
+                ['name' => 'Eksisting', 'y' => 0],
                 ['name' => 'Rencana', 'y' => 0],
             ];
         } else {
             $data = [
                 [
-                    'name' => 'Realisasi',
+                    'name' => 'Eksisting',
                     'y' => round(($jumlahFasilitas / $total) * 100, 2)
                 ],
                 [
@@ -70,6 +71,52 @@ class ChartsController extends BaseController
         return $this->response->setJSON([
             'status' => 'success',
             'data' => $data
+        ]);
+    }
+
+    public function fasilitasRencanaPerKabKota()
+    {
+        $db = Database::connect();
+
+        $builder1 = $db->table('fasilitas');
+        $builder1->select('kab_kota, COUNT(*) as total');
+        $builder1->groupBy('kab_kota');
+        $builder1->orderBy('kab_kota', 'ASC');
+        $fasilitasData = $builder1->get()->getResultArray();
+
+        $builder2 = $db->table('rencana');
+        $builder2->select('kab_kota, COUNT(*) as total');
+        $builder2->groupBy('kab_kota');
+        $builder2->orderBy('kab_kota', 'ASC');
+        $rencanaData = $builder2->get()->getResultArray();
+
+        $allKabKota = [];
+
+        foreach ($fasilitasData as $row) {
+            $allKabKota[$row['kab_kota']]['fasilitas'] = (int)$row['total'];
+        }
+
+        foreach ($rencanaData as $row) {
+            $allKabKota[$row['kab_kota']]['rencana'] = (int)$row['total'];
+        }
+
+        $categories = [];
+        $fasilitasValues = [];
+        $rencanaValues = [];
+
+        foreach ($allKabKota as $kab => $data) {
+            $categories[] = $kab;
+            $fasilitasValues[] = isset($data['fasilitas']) ? $data['fasilitas'] : 0;
+            $rencanaValues[] = isset($data['rencana']) ? $data['rencana'] : 0;
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'categories' => $categories,
+            'series' => [
+                ['name' => 'Fasilitas', 'data' => $fasilitasValues],
+                ['name' => 'Rencana', 'data' => $rencanaValues],
+            ]
         ]);
     }
 }
