@@ -1,4 +1,8 @@
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
+<script src="<?= base_url('assets/template/js/') ?>leaflet.geometryutil.js"></script>
+<script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
+<script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
 <!-- Form Upload -->
 <div class="mb-3" id="importKMZ">
     <label for="kmlFile" class="form-label fw-bold">Pilih Folder KMZ</label>
@@ -27,7 +31,7 @@
             max-height:400px; overflow:auto; white-space: pre-wrap; font-family: monospace;">
     <em>Belum ada data diimport.</em>
 </div>
-
+<div id="map" hidden></div>
 <script>
         $(document).ready(function () {
 
@@ -70,8 +74,8 @@
             const jenisFasilitasKeywords = [
                 { kategori: "Rambu", jenis: "Rambu Larangan", keys: ["rambu larangan","larangan","dilarang","no entry","stop","no parkir","no parking","no u-turn","no right turn","no left turn","rambu stop","rambu dilarang", "plang dilarang", "plang larangan", "larang"] },
                 { kategori: "Rambu", jenis: "Rambu Perintah", keys: ["rambu perintah","wajib","belok kanan wajib","belok kiri wajib","gunakan helm","gunakan lajur kiri","nyalakan lampu","wajib belok","perintah", "plang perintah", "terus", "lurus", "harus", "gunakan"] },
-                { kategori: "Rambu", jenis: "Rambu Peringatan", keys: ["rambu peringatan","hati-hati","waspada","tanjakan","turunan","rawan","rambu kuning","penyempitan","licin","bergelombang","anak sekolah","hewan","rambu tikungan","menanjak","menurun","jalan rusak", "plang peringatan", "hati", "plang pejalan"] },
-                { kategori: "Rambu", jenis: "Rambu Petunjuk", keys: ["rambu petunjuk","petunjuk","arah","tujuan","nama jalan","belok kiri","belok kanan","jarak","km","terminal","bandara","pelabuhan","hotel","wisata", "orang", "plang jalan", "plang jl", "plang petunjuk", "jam", "kilometer", "belok", "putar", "bundaran", "rambu tafficlight", "plang traffic", "rambu lampu", "plang rambu", "tikungan", "informasi", "plang zebra", "simpang", "perempatan", "pertigaan", "masjid", "spbu", "pombensin"] },
+                { kategori: "Rambu", jenis: "Rambu Peringatan", keys: ["rambu peringatan","hati-hati","waspada","tanjakan","turunan","rawan","rambu kuning","penyempitan","licin","bergelombang","anak sekolah","hewan","rambu tikungan","menanjak","menurun","jalan rusak", "plang peringatan", "hati", "plang pejalan", "jembatan", "merge"] },
+                { kategori: "Rambu", jenis: "Rambu Petunjuk", keys: ["rambu petunjuk","petunjuk","arah","tujuan","nama jalan","belok kiri","belok kanan","jarak","km","terminal","bandara","pelabuhan","hotel","wisata", "orang", "plang jalan", "plang jl", "plang petunjuk", "jam", "kilometer", "belok", "putar", "bundaran", "rambu tafficlight", "plang traffic", "rambu lampu", "plang rambu", "tikungan", "informasi", "plang zebra", "simpang", "perempatan", "pertigaan", "masjid", "spbu", "pombensin", "pejalan"] },
                 { kategori: "Rambu", jenis: "Rambu Tambahan", keys: ["rambu tambahan","tambahan","angka jarak","keterangan","plang tambahan","keterangan waktu"] },
                 { kategori: "Marka", jenis: "Marka Membujur", keys: ["marka membujur","garis tengah","as jalan","garis as","garis putus","garis kuning","pembatas jalan","lajur","marka tengah"] },
                 { kategori: "Marka", jenis: "Marka Melintang", keys: ["marka melintang","stop line","garis berhenti","marka berhenti","henti","melintang"] },
@@ -162,7 +166,7 @@
                             if (isNaN(lat) || isNaN(lng)) return null;
                             
                             // 🌍 Cari ruas jalan terdekat 
-                            let nearest = getNearestRoad(lat, lng, jalanProvinsi);
+                            let nearest = getNearestRoad(lat, lng);
 
                             const photos = [];
                             if (props.pdfmaps_photos) {
@@ -256,16 +260,32 @@
                 reader.readAsText(kmlFile);
             });
 
-            function getNearestRoad(lat, lng, jalanProvinsiGeoJSON) {
-                // Pastikan koordinat valid
-                lat = parseFloat(lat);
-                lng = parseFloat(lng);
-                if (isNaN(lat) || isNaN(lng)) {
-                    console.warn("⚠️ Koordinat tidak valid:", lat, lng);
-                    return null;
+            var map = L.map('map').setView([-8.6529, 117.3616], 9);
+            let jalanProvinsiGeoJSON = null;
+            // --- Shapefile: Jalan Provinsi NTB ---
+            var shpJalan = new L.Shapefile("<?= base_url('assets/shp/jalan_provinsi_ntb.zip') ?>", {
+                style: { color: '#e53935', weight: 3, opacity: 0.8 },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties) {
+                        let props = Object.keys(feature.properties)
+                            .map(k => k + ": " + feature.properties[k])
+                            .join("<br />");
+                        layer.bindPopup(props, { maxHeight: 200 });
+                    }
                 }
+            });
 
-                const point = turf.point([lng, lat]);
+            // simpan GeoJSON setelah selesai dimuat
+            var layerJalanProvinsi = [];
+            shpJalan.once("data:loaded", function() {
+                jalanProvinsiGeoJSON = shpJalan.toGeoJSON();
+                shpJalan.eachLayer(function (lyr) {
+                    layerJalanProvinsi.push(lyr);
+                });
+                console.log("✅ Data jalan provinsi siap:", layerJalanProvinsi.length, "fitur");
+            });
+            
+            function getNearestRoad(lat, lng, radiusMeter = 15) {
                 let nearestRoad = {
                     Nm_Ruas: "Tidak diketahui",
                     Desa_kel: "-",
@@ -273,56 +293,35 @@
                     Kab_Kot: "-",
                     minDistance: Infinity
                 };
+                const point = L.latLng(lat, lng);
+                let nearest = { dist: Infinity, props: null };
 
-                jalanProvinsiGeoJSON.features.forEach((f, idx) => {
-                    if (!f.geometry || !f.geometry.coordinates) return;
+                layerJalanProvinsi.forEach(lyr => {
+                    if (!lyr.feature || !lyr.getLatLngs) return;
 
-                    let segments = [];
-
-                    // 🔹 Deteksi tipe geometry
-                    if (f.geometry.type === "LineString") {
-                        segments = [f.geometry.coordinates];
-                    } else if (f.geometry.type === "MultiLineString") {
-                        segments = f.geometry.coordinates;
-                    } else {
-                        console.warn(`⚠️ Geometry tipe ${f.geometry.type} di-skip (fitur ke-${idx})`);
-                        return;
-                    }
-
-                    // 🔹 Loop setiap ruas garis
-                    segments.forEach((coords, i) => {
-                        try {
-                            // Validasi: pastikan semua elemen koordinat numerik
-                            if (
-                                !Array.isArray(coords) ||
-                                coords.length === 0 ||
-                                !coords.every(c => Array.isArray(c) && c.length === 2 &&
-                                    typeof c[0] === "number" && typeof c[1] === "number")
-                            ) {
-                                console.warn(`⚠️ Koordinat tidak valid pada segmen ke-${i} fitur ${idx}`);
-                                return;
-                            }
-
-                            const line = turf.lineString(coords);
-                            const snapped = turf.nearestPointOnLine(line, point, { units: "meters" });
-                            const dist = snapped.properties.dist;
-
-                            if (dist < nearestRoad.minDistance) {
-                                nearestRoad = {
-                                    Nm_Ruas: f.properties?.Nm_Ruas || "Tanpa nama",
-                                    Desa_kel: f.properties?.Desa_Kel || "-",
-                                    Kecamatan: f.properties?.Kecamatan || "-",
-                                    Kab_Kot: f.properties?.Kab_Kot || "-",
-                                    minDistance: dist
-                                };
-                            }
-                        } catch (err) {
-                            // console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
+                    const coords = lyr.getLatLngs().flat();
+                    for (let i = 0; i < coords.length - 1; i++) {
+                        const segA = coords[i];
+                        const segB = coords[i + 1];
+                        const jarak = L.GeometryUtil.distanceSegment(map, point, segA, segB);
+                        if (jarak < nearest.dist) {
+                            nearest.dist = jarak;
+                            nearest.props = lyr.feature.properties;
                         }
-                    });
+                    }
                 });
 
-                return nearestRoad;
+                if (nearest.dist <= radiusMeter && nearest.props) {
+                    return nearestRoad = {
+                        Nm_Ruas: nearest.props.Nm_Ruas || "Tanpa nama",
+                        Desa_kel: nearest.props.Desa_Kel || "-",
+                        Kecamatan: nearest.props.Kecamatan || "-",
+                        Kab_Kot: nearest.props.Kab_Kot || "-",
+                        minDistance: nearest.dist
+                    };
+                } else {
+                    return "Tidak ada jalan dalam radius " + radiusMeter + " m";
+                }
             }
 
         });

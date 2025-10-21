@@ -46,6 +46,7 @@
 
 <!-- Leaflet JavaScript -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= base_url('assets/template/') ?>js/leaflet.geometryutil.js"></script>
 <script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
 <script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
 
@@ -296,9 +297,13 @@
     });
 
     // simpan GeoJSON setelah selesai dimuat
+    var layerJalanProvinsi = [];
     shpJalan.once("data:loaded", function() {
         jalanProvinsiGeoJSON = shpJalan.toGeoJSON();
-        console.log( jalanProvinsiGeoJSON );
+        shpJalan.eachLayer(function (lyr) {
+            layerJalanProvinsi.push(lyr);
+        });
+        console.log("✅ Data jalan provinsi siap:", layerJalanProvinsi.length, "fitur");
     });
 
     shpJalan.addTo(map);
@@ -546,70 +551,35 @@
         window.legendControl.addTo(map);
     }
 
-    function getNearestRoad(lat, lng) {
-        if (!jalanProvinsiGeoJSON || !jalanProvinsiGeoJSON.features) {
-            return "Tidak ada data jalan";
-        }
+    function getNearestRoad(lat, lng, radiusMeter = 30) {
+        if (!layerJalanProvinsi.length) return "Data jalan belum siap";
 
-        // Pastikan koordinat valid
-        lat = parseFloat(lat);
-        lng = parseFloat(lng);
-        if (isNaN(lat) || isNaN(lng)) {
-            console.warn("⚠️ Koordinat tidak valid:", lat, lng);
-            return "Koordinat tidak valid";
-        }
+        const point = L.latLng(lat, lng);
+        let nearest = { dist: Infinity, props: null };
 
-        const point = turf.point([lng, lat]);
-        let nearestRoadName = "Tidak diketahui";
-        let wilayah = "Tidak diketahui";
-        let minDistance = Infinity;
+        layerJalanProvinsi.forEach(lyr => {
+            if (!lyr.feature || !lyr.getLatLngs) return;
 
-        jalanProvinsiGeoJSON.features.forEach((f, idx) => {
-            if (!f.geometry || !f.geometry.coordinates) return;
-
-            let segments = [];
-
-            // 🔹 Deteksi tipe geometry
-            if (f.geometry.type === "LineString") {
-                segments = [f.geometry.coordinates];
-            } else if (f.geometry.type === "MultiLineString") {
-                segments = f.geometry.coordinates;
-            } else {
-                console.warn(`⚠️ Geometry tipe ${f.geometry.type} di-skip (fitur ke-${idx})`);
-                return;
-            }
-
-            // 🔹 Loop setiap ruas garis
-            segments.forEach((coords, i) => {
-                try {
-                    // Validasi: pastikan semua elemen koordinat numerik
-                    if (
-                        !Array.isArray(coords) ||
-                        coords.length === 0 ||
-                        !coords.every(c => Array.isArray(c) && c.length === 2 && 
-                                        typeof c[0] === "number" && typeof c[1] === "number")
-                    ) {
-                        console.warn(`⚠️ Koordinat tidak valid pada segmen ke-${i} fitur ${idx}`);
-                        return;
-                    }
-
-                    const line = turf.lineString(coords);
-                    const snapped = turf.nearestPointOnLine(line, point, { units: "meters" });
-                    const dist = snapped.properties.dist;
-
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        wilayah = `${f.properties.Desa_Kel || '-'}, ${f.properties.Kecamatan || '-'}, ${f.properties.Kab_Kot || '-'}`;
-                        nearestRoadName = f.properties.Nm_Ruas || "Tanpa nama";
-                    }
-                } catch (err) {
-                    // console.warn(`⚠️ Error menghitung segmen ${i} fitur ${idx}:`, err.message);
+            const coords = lyr.getLatLngs().flat();
+            for (let i = 0; i < coords.length - 1; i++) {
+                const segA = coords[i];
+                const segB = coords[i + 1];
+                const jarak = L.GeometryUtil.distanceSegment(map, point, segA, segB);
+                if (jarak < nearest.dist) {
+                    nearest.dist = jarak;
+                    nearest.props = lyr.feature.properties;
                 }
-            });
+            }
         });
 
-        return `${nearestRoadName} (${minDistance.toFixed(1)} m - ${wilayah})`;
+        if (nearest.dist <= radiusMeter && nearest.props) {
+            return `${nearest.props.Nm_Ruas || "Tanpa nama"} (${nearest.dist.toFixed(1)} m) 
+                <br>${nearest.props.Desa_Kel || "-"}, ${nearest.props.Kecamatan || "-"}, ${nearest.props.Kab_Kot || "-"}`;
+        } else {
+            return "Tidak ada jalan dalam radius " + radiusMeter + " m";
+        }
     }
+
 
     function getMarkers() {
         $.ajax({
