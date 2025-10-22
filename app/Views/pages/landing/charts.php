@@ -1,14 +1,15 @@
 <div class="row mt-3" id="charts">
-    <div class="col-md-3 col-sm-12">
-        <div  id="kondisiChartContainer" style="height: 550px; width: 100%;"></div>
+    <div class="col-md-4 col-sm-12">
+        <div id="kondisiChartContainer" style="height: 550px; width: 100%;"></div>
     </div>
-    <div class="col-md-3 col-sm-12">
-        <div  id="perbandinganChartContainer" style="height: 550px; width: 100%;"></div>
+    <div class="col-md-4 col-sm-12">
+        <div id="perbandinganChartContainer" style="height: 550px; width: 100%;"></div>
     </div>
-    <div class="col-md-3 col-sm-12">
-        <div  id="perKotaChartContainer" style="height: 550px; width: 600px;"></div>
+    <div class="col-md-4 col-sm-12">
+        <div id="perKotaChartContainer" style="height: 550px; width: 100%;"></div>
     </div>
 </div>
+
 <script>
     $(() => {
         initKondisiChart();
@@ -47,10 +48,10 @@
                         },
                         plotOptions: {
                             pie: {
-                                allowPointSelect: true,
+                                allowPointSelect: false,
                                 cursor: 'pointer',
                                 dataLabels: {
-                                    enabled: false,
+                                    enabled: true,
                                     format: '<b>{point.name}</b>: {point.y}%',
                                     style: { fontSize: '12px' }
                                 },
