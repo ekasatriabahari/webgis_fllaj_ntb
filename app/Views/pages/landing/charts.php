@@ -35,7 +35,7 @@
                         title: {
                             text: 'Kondisi Fasilitas',
                             style: {
-                                fontSize: '12px',
+                                fontSize: '18px',
                                 fontWeight: 'bold',
                                 color: '#333'
                             }
@@ -99,7 +99,7 @@
                         title: {
                             text: 'Perbandingan Data Fasilitas vs Rencana',
                             style: {
-                                fontSize: '12px',
+                                fontSize: '18px',
                                 fontWeight: 'bold',
                                 color: '#333'
                             }
