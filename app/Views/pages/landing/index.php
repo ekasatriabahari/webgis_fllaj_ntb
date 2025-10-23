@@ -187,6 +187,8 @@
             
             <?php include('rencana.php'); ?>
 
+            <?php include('charts2.php'); ?>
+            
         </section>
         <!-- footer -->
         <footer class="bg-white rounded shadow p-5 mb-4 mt-4 mx-3">

@@ -119,4 +119,45 @@ class ChartsController extends BaseController
             ]
         ]);
     }
+
+    public function kondisiPiePerKota()
+    {
+        $db = Database::connect();
+        $builder = $db->table('fasilitas');
+
+        $data = $builder
+            ->select("kab_kota, kondisi, COUNT(*) as total")
+            ->groupBy("kab_kota, kondisi")
+            ->orderBy("kab_kota ASC")
+            ->get()
+            ->getResultArray();
+
+        if (!$data) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan'
+            ]);
+        }
+
+        // === Proses data menjadi format siap pakai untuk frontend ===
+        $grouped = [];
+        foreach ($data as $row) {
+            $kab = $row['kab_kota'] ?: 'Tidak Diketahui';
+            if (!isset($grouped[$kab])) {
+                $grouped[$kab] = [
+                    'kab_kota' => $kab,
+                    'data' => []
+                ];
+            }
+            $grouped[$kab]['data'][] = [
+                'name' => ucfirst($row['kondisi']),
+                'y' => (int) $row['total']
+            ];
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => array_values($grouped)
+        ]);
+    }
 }

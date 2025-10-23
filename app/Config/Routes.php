@@ -68,6 +68,7 @@ $routes->group('api', function ($routes) {
         $routes->get('kondisi', 'ChartsController::kondisi');
         $routes->get('eksisting-rencana', 'ChartsController::eksistingRencana');
         $routes->get('fasilitas-rencana-per-kab-kota', 'ChartsController::fasilitasRencanaPerKabKota');
+        $routes->get('kondisi-pie-per-kota', 'ChartsController::kondisiPiePerKota');
     });
 });
 
@@ -116,6 +117,20 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
         $routes->post('import', 'DatabaseController::import');
         $routes->post('backup', 'DatabaseController::backup');
         $routes->get('logs', 'DatabaseController::logs');
+    });
+
+    /* Log Import KMZ */
+    $routes->group('log-import-kmz', function($routes){
+        $routes->get('/', 'LogImportKmzController::lists');
+        $routes->post('/', 'LogImportKmzController::save');
+    });
+
+    /* Laporan */
+    $routes->group('laporan', function($routes){
+        $routes->get('fasilitas-report', 'LaporanController::fasilitasTableReport');
+        $routes->get('fasilitas-report/ruas/(:any)', 'LaporanController::fasilitasByRuas/$1');
+        $routes->get('rencana-report', 'LaporanController::rencanaTableReport');
+        $routes->get('rencana-report/ruas/(:any)', 'LaporanController::rencanaByRuas/$1');
     });
 
 });
