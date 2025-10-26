@@ -117,6 +117,7 @@ $routes->group('api', ['filter' => 'auth'], function ($routes) {
         $routes->post('import', 'DatabaseController::import');
         $routes->post('backup', 'DatabaseController::backup');
         $routes->get('logs', 'DatabaseController::logs');
+        $routes->post('remove-by-log-batch/(:num)', 'ImportFasilitasController::removeByIDImport/$1');
     });
 
     /* Log Import KMZ */

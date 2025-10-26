@@ -155,4 +155,18 @@ class ImportFasilitasController extends BaseController
         ]);
     }
 
+    public function removeByIDImport($import_batch_kmz_id)
+    {
+        $modelFasilitas = model('FasilitasModel');
+        $modelRencana = model('RencanaModel');
+
+        $modelFasilitas->where('import_batch_kmz_id', $import_batch_kmz_id)->delete();
+        $modelRencana->where('import_batch_kmz_id', $import_batch_kmz_id)->delete();
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'success' => true,
+            'message' => 'Data berhasil dihapus.'
+        ]);
+    }
 }

@@ -40,6 +40,7 @@
                 <th>Direktori KMZ</th>
                 <th>Diupload oleh</th>
                 <th>Tanggal</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody id="tbodyLogImportTable"></tbody>
@@ -157,7 +158,9 @@
             }
 
             // process log
+            let importBatchID = null;
             await $.post("<?= site_url('api/log-import-kmz'); ?>", { filepath: folderPath })
+            .then((res) => importBatchID = res.id) 
             .then(() => console.log("✅ Log import disimpan:", folderPath))
             .catch(err => console.error("❌ Gagal menyimpan log import:", err));
 
@@ -213,6 +216,7 @@
                             tahun_survey: tahunSurvey,
                             foto: photos,
                             catatan: props.Description || "",
+                            import_batch_kmz: importBatchID,
                             nama_ruas: nearest?.Nm_Ruas || null, 
                             kelurahan: nearest?.Desa_kel || null, 
                             kecamatan: nearest?.Kecamatan || null, 
@@ -365,6 +369,9 @@
                                 <td>${item.filepath}</td>
                                 <td>${item.created_by}</td>
                                 <td>${item.created_at}</td>
+                                <td>
+                                    <button onclick="removeBatch('${item.id}')" class="btn btn-danger btn-sm"><i class="fas fa-trash-alt" data-tooltip="Hapus Data Import ini"></i></button>
+                                </td>
                             </tr>`;
                     });
                 }else{
@@ -372,6 +379,40 @@
                 }
                 
                 logTable.html(rows);
+            }
+        });
+    }
+
+    function removeBatch(id){
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data yang dihapus tidak akan bisa dipulihkan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Hapus!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "<?= site_url('api/database/remove-by-log-batch/') ?>" + id,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: (res) => {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success', 
+                                text: res.message
+                            }).then(() => {
+                                getLogImportData();
+                            });
+                        }
+                    },
+                    error: (err) => {
+                        console.log(err);
+                    }
+                });
             }
         });
     }

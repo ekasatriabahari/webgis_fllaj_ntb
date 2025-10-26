@@ -29,6 +29,7 @@ class LogImportKmzController extends BaseController
         return $this->response->setJSON([
             'status' => 'success',
             'success' => true,
+            'id' => $model->getInsertID(),
             'message' => 'Log import berhasil disimpan.'
         ]);
     }

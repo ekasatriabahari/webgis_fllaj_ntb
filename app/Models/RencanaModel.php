@@ -12,7 +12,7 @@ class RencanaModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['id', 'kode_fasilitas', 'jenis_fasilitas_id', 'nama_fasilitas', 'latitude', 'longitude', 'tahun_survey', 'foto', 'catatan', 'nama_ruas', 'kelurahan', 'kecamatan', 'kab_kota',  'created_at', 'updated_at'];
+    protected $allowedFields    = ['id', 'kode_fasilitas', 'jenis_fasilitas_id', 'nama_fasilitas', 'latitude', 'longitude', 'tahun_survey', 'foto', 'catatan', 'import_batch_kmz', 'nama_ruas', 'kelurahan', 'kecamatan', 'kab_kota',  'created_at', 'updated_at'];
 
     protected bool $allowEmptyInserts = false;
 
