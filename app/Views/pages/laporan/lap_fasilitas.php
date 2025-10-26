@@ -26,23 +26,52 @@
 
     <label class="ms-2">Jenis Fasilitas:</label>
     <select id="filterJenis" class="form-select form-select-sm" style="width:auto; display:inline-block;">
-        <option value="">Semua</option>
-        <option value="1">Rambu</option>
-        <option value="2">Marka</option>
-        <option value="3">Lampu</option>
+        <!-- loaded via ajax -->
     </select>
+    <script>
+        $(() => {
+            $.ajax({
+                url: '<?= site_url("api/jenis_fasilitas") ?>',
+                type: 'GET',
+                data: {
+                    'columns[1][search][value]': ''
+                },
+                dataType: 'json',
+                success: (response) => {
+                    const allData = response.data;
+
+                    // --- isi dropdown kategori (unik) ---
+                    const kategoriUnik = [...new Set(allData.map(item => item.kategori))];
+                    let optKategori = '<option value="">Pilih Jenis Fasilitas</option>';
+                    kategoriUnik.forEach(kat => {
+                        optKategori += `<option value="${kat}">${kat}</option>`;
+                    });
+                    $('#filterJenis').html(optKategori);
+                },
+                error: (err) => {
+                    console.log(err);
+                }
+            });
+        })
+    </script>
 </div>
 
 <div class="table-responsive">
     <table id="laporanTable" class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th></th>
-                <th>Kab/Kota</th>
-                <th>Kecamatan</th>
-                <th>Kelurahan</th>
-                <th>Nama Ruas</th>
-                <th>Total Fasilitas</th>
+                <th rowspan="2">#</th>
+                <th rowspan="2">Kab/Kota</th>
+                <th rowspan="2">Kecamatan</th>
+                <th rowspan="2">Kelurahan</th>
+                <th rowspan="2">Nama Ruas</th>
+                <th colspan="3" class="text-center">Kondisi</th>
+                <th rowspan="2">Total Fasilitas</th>
+            </tr>
+            <tr>
+                <th class="text-center">Baik</th>
+                <th class="text-center">Rusak Ringan</th>
+                <th class="text-center">Rusak Berat</th>
             </tr>
         </thead>
     </table>
@@ -102,6 +131,9 @@ $(document).ready(function() {
             { data: 'kecamatan' },
             { data: 'kelurahan' },
             { data: 'nama_ruas' },
+            { data: 'total_baik' },
+            { data: 'total_rusak_ringan' },
+            { data: 'total_rusak_berat' },
             { data: 'total' }
         ],
         order: [[1, 'asc']],
@@ -182,7 +214,7 @@ $(document).ready(function() {
                         <th>Kondisi</th>
                         <th>Latitude</th>
                         <th>Longitude</th>
-                        <th>Foto</th>
+                        <!-- <th>Foto</th> -->
                         <th>Catatan</th>
                     </tr>
                 </thead>
@@ -243,7 +275,7 @@ $(document).ready(function() {
                             <td>${f.kondisi}</td>
                             <td>${f.latitude}</td>
                             <td>${f.longitude}</td>
-                            <td>${fotoBtn}</td>
+                            <!-- <td>${fotoBtn}</td> -->
                             <td>${f.catatan ?? '-'}</td>
                         </tr>
                     `);

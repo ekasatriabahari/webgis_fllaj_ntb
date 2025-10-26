@@ -19,25 +19,24 @@ class LaporanController extends BaseController
         $db = db_connect();
         $request = service('request');
 
-        // // Filter input dari datatables atau form
-        // $kondisi = $request->getGet('kondisi');
-        // $jenis_id = $request->getGet('jenis_fasilitas_id');
-        $kab_kota = $request->getGet('kab_kota');
-        $kecamatan = $request->getGet('kecamatan');
-        $kelurahan = $request->getGet('kelurahan');
+        $kab_kota   = $request->getGet('kab_kota');
+        $kecamatan  = $request->getGet('kecamatan');
+        $kelurahan  = $request->getGet('kelurahan');
 
         $builder = $db->table('fasilitas');
-        $builder->select('kab_kota, kecamatan, kelurahan, nama_ruas, COUNT(*) as total');
 
-        // Terapkan filter jika ada
-        // if (!empty($kondisi)) {
-        //     $builder->where('kondisi', $kondisi);
-        // }
+        $builder->select("
+            kab_kota,
+            kecamatan,
+            kelurahan,
+            nama_ruas,
+            COUNT(*) as total,
+            SUM(CASE WHEN kondisi = 'baik' THEN 1 ELSE 0 END) AS total_baik,
+            SUM(CASE WHEN kondisi = 'rusak_ringan' THEN 1 ELSE 0 END) AS total_rusak_ringan,
+            SUM(CASE WHEN kondisi = 'rusak_berat' THEN 1 ELSE 0 END) AS total_rusak_berat
+        ");
 
-        // if (!empty($jenis_id)) {
-        //     $builder->where('jenis_fasilitas_id', $jenis_id);
-        // }
-
+        // Filter jika ada
         if (!empty($kab_kota)) {
             $builder->where('kab_kota', $kab_kota);
         }
@@ -60,11 +59,14 @@ class LaporanController extends BaseController
         $data = [];
         foreach ($query as $row) {
             $data[] = [
-                'kab_kota'   => $row['kab_kota'],
-                'kecamatan'  => $row['kecamatan'],
-                'kelurahan'  => $row['kelurahan'],
-                'nama_ruas'  => $row['nama_ruas'],
-                'total'      => (int)$row['total']
+                'kab_kota'         => $row['kab_kota'],
+                'kecamatan'        => $row['kecamatan'],
+                'kelurahan'        => $row['kelurahan'],
+                'nama_ruas'        => $row['nama_ruas'],
+                'total'            => (int)$row['total'],
+                'total_baik'       => (int)$row['total_baik'],
+                'total_rusak_ringan' => (int)$row['total_rusak_ringan'],
+                'total_rusak_berat' => (int)$row['total_rusak_berat'],
             ];
         }
 
@@ -73,23 +75,25 @@ class LaporanController extends BaseController
         ]);
     }
 
+
     public function fasilitasByRuas($ruas)
     {
         $db = db_connect();
         $req = service('request');
 
         $kondisi = $req->getGet('kondisi');
-        $jenis = $req->getGet('jenis_fasilitas_id');
+        $jenis = $req->getGet('kategori');
 
         $builder = $db->table('fasilitas');
-        $builder->select('id, nama_fasilitas, kondisi, latitude, longitude, foto, catatan, tahun_survey');
+        $builder->join('jenis_fasilitas', 'fasilitas.jenis_fasilitas_id = jenis_fasilitas.id');
+        $builder->select('fasilitas.id, nama_fasilitas, kondisi, latitude, longitude, foto, catatan, tahun_survey, jenis_fasilitas.kategori');
         $builder->where('nama_ruas', urldecode($ruas));
 
         if (!empty($kondisi)) {
             $builder->where('kondisi', $kondisi);
         }
         if (!empty($jenis)) {
-            $builder->where('jenis_fasilitas_id', $jenis);
+            $builder->where('jenis_fasilitas.kategori', $jenis);
         }
 
         $result = $builder->get()->getResultArray();
