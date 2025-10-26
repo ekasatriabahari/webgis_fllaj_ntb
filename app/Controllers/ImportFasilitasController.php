@@ -98,6 +98,7 @@ class ImportFasilitasController extends BaseController
                     'longitude'          => $item['longitude'],
                     'tahun_survey'       => $tahun,
                     'catatan'            => $item['catatan'] ?? '',
+                    'import_batch_kmz'   => $item['import_batch_kmz'] ?? null,   
                     'foto'               => json_encode($uploadedNames),
                     'nama_ruas'          => $item['nama_ruas'] ?? null,
                     'kelurahan'          => $item['kelurahan'] ?? null,
@@ -159,9 +160,11 @@ class ImportFasilitasController extends BaseController
     {
         $modelFasilitas = model('FasilitasModel');
         $modelRencana = model('RencanaModel');
+        $modelLog = model('LogImportKmzModel');
 
-        $modelFasilitas->where('import_batch_kmz_id', $import_batch_kmz_id)->delete();
-        $modelRencana->where('import_batch_kmz_id', $import_batch_kmz_id)->delete();
+        $modelLog->where('id', $import_batch_kmz_id)->delete();
+        $modelFasilitas->where('import_batch_kmz', $import_batch_kmz_id)->delete();
+        $modelRencana->where('import_batch_kmz', $import_batch_kmz_id)->delete();
 
         return $this->response->setJSON([
             'status' => 'success',
