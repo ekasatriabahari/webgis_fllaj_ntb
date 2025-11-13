@@ -3,6 +3,14 @@
 <script src="<?= base_url('assets/template/js/') ?>leaflet.geometryutil.js"></script>
 <script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
 <script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
+
+<!-- Warning -->
+<div class="mb-3">
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Perhatian!</h4>
+        <p>Silahkan melakukan backup database dahulu sebelum melakukan import KMZ agar bisa melakukan restore jika terjadi kesalahan yang tidak disengaja.</p>
+    </div>
+</div>
 <!-- Form Upload -->
 <div class="mb-3" id="importKMZ">
     <label for="kmlFile" class="form-label fw-bold">Pilih Folder KMZ</label>
@@ -64,10 +72,10 @@
             "lampu padam sebagian","retak","berdebu","kusam","longgar","pudar","berkarat",
             "rambu terhalang","marka pudar","guardrail miring","tiang miring","kamera buram",
             "lensa kotor","lampu goyang","cover retak","cat mengelupas","tiang condong", 
-            "rusak", "tidak ada", "buram"
+            "rusak", "tidak ada", "buram", "perbaikan"
         ];
 
-        const rencanaKeywords = ["usulan", "rencana", "pengadaan", "perlu", "penambahan", "perbaikan"];
+        const rencanaKeywords = ["usulan", "rencana", "pengadaan", "perlu", "penambahan"];
 
         function deteksiKondisi(desc) {
             const text = (desc || "").toLowerCase();
@@ -136,7 +144,7 @@
         // 3️⃣ EVENT KONVERSI DAN IMPORT
         // ============================
         $("#convertBtn").on("click", async function () {
-            $("#tbodyLogImportTable").html(`<tr><td colspan="3"><em>Memuat...</em></td></tr>`);
+            $("#tbodyLogImportTable").html(`<tr><td colspan="4"><em>Memuat...</em></td></tr>`);
             const files = $("#kmlFile")[0].files;
             if (!files.length) {
                 alert("⚠️ Pilih folder hasil extract KMZ (berisi doc.kml dan folder images/)!");

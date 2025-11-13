@@ -137,7 +137,9 @@ $(document).ready(function() {
             { data: 'total' }
         ],
         order: [[1, 'asc']],
-        dom: 'Bfrtip',
+        lengthMenu: [[25, 50, 100, 150 -1], [25, 50, 100, 150, "All"]],
+        pageLength: 150,
+        dom: 'Blfrtip',
         buttons: [
             { extend: 'excelHtml5', title: 'Laporan Fasilitas per Ruas' },
             { extend: 'pdfHtml5', title: 'Laporan Fasilitas per Ruas' },

@@ -1,11 +1,11 @@
 <div class="row mt-3" id="charts">
-    <div class="col-md-4 col-sm-12">
+    <div class="col-md-6 col-sm-12 mb-3">
         <div id="kondisiChartContainer" style="height: 550px; width: 100%;"></div>
     </div>
-    <div class="col-md-4 col-sm-12">
+    <div class="col-md-6 col-sm-12">
         <div id="perbandinganChartContainer" style="height: 550px; width: 100%;"></div>
     </div>
-    <div class="col-md-4 col-sm-12">
+    <div class="col-md-12 col-sm-12">
         <div id="perKotaChartContainer" style="height: 550px; width: 100%;"></div>
     </div>
 </div>
@@ -33,7 +33,7 @@
                             borderRadius: 10
                         },
                         title: {
-                            text: 'Kondisi Fasilitas',
+                            text: 'Kondisi Eksisting',
                             style: {
                                 fontSize: '18px',
                                 fontWeight: 'bold',

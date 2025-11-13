@@ -36,6 +36,15 @@ $(document).ready(function() {
                     accessibility: {
                         point: { valueSuffix: '%' }
                     },
+                    exporting: {
+                        chartOptions: {
+                            chart: {
+                                style: {
+                                    fontFamily: 'monospace'
+                                }
+                            }
+                        }
+                    },
                     plotOptions: {
                         pie: {
                             allowPointSelect: true,
@@ -51,7 +60,14 @@ $(document).ready(function() {
                         name: 'Persentase',
                         colorByPoint: true,
                         data: item.data
-                    }]
+                    }],
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom'
+                    },
+                    credits: { enabled: false }
+                    
                 });
             });
         },

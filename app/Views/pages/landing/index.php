@@ -36,6 +36,7 @@
 
 <!-- Highcharts -->
 <script src="<?= base_url('assets/template') ?>/highcharts/highcharts.js"></script>
+<script src="<?= base_url('assets/template') ?>/highcharts/exporting.js"></script>
 
 <!-- Datatables -->
 <link rel="text/css" href="<?= base_url('assets/template') ?>/datatables/datatables.min.css">
@@ -49,6 +50,11 @@
 <script src="<?= base_url('assets/template/') ?>js/leaflet.geometryutil.js"></script>
 <script src="<?= base_url('assets/template/') ?>leafletjs/leaflet.shpfile.js"></script>
 <script src="<?= base_url('assets/template/') ?>leafletjs/shp.js"></script>
+
+<!-- Lealflet Clusters -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
 <!-- untuk mendapatkan data ruas jalan dari layer jalan provinsi -->
 <script src="<?= base_url('assets/template/js/') ?>turf.min.js"></script>
@@ -213,12 +219,12 @@
         width: 100%;
     }
 
-    #kondisiChartContainer {
+    /* #kondisiChartContainer {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 15px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    } */
 
     .highcharts-legend-item text {
         font-size: 14px !important;
@@ -596,7 +602,7 @@
                     didOpen: () => Swal.showLoading()
                 });
             },
-            success: function(response) {
+            success: function (response) {
                 Swal.close();
                 const fasilitasData = response.data.fasilitas || [];
                 const rencanaData = response.data.rencana || [];
@@ -618,16 +624,22 @@
                     fasilitasContainer.appendChild(kodeContainer);
 
                     fasilitasGroups[group.kode] = {};
+
                     group.jenis.forEach(j => {
-                        let jenisLayer = L.layerGroup();
-                        fasilitasGroups[group.kode][j.nama_jenis] = jenisLayer;
+                        // Buat cluster group untuk setiap jenis
+                        let clusterGroup = L.markerClusterGroup({
+                            disableClusteringAtZoom: 17,
+                            spiderfyOnMaxZoom: true,
+                            showCoverageOnHover: false,
+                        });
+                        fasilitasGroups[group.kode][j.nama_jenis] = clusterGroup;
 
                         // Checkbox per jenis fasilitas
                         let checkbox = document.createElement('label');
                         checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-fasilitas" checked> ${j.nama_jenis}<br>`;
                         kodeContainer.appendChild(checkbox);
 
-                        // Marker per data
+                        // Tambahkan semua marker ke cluster group
                         j.data.forEach(item => {
                             let icon;
                             if (j.icon && j.icon.trim() !== "") {
@@ -646,14 +658,21 @@
                                 });
                             }
 
-                            L.marker([item.latitude, item.longitude], { icon: icon })
-                                .addTo(jenisLayer)
-                                .bindPopup(markerPopup({ ...item, jenis: j.nama_jenis, tahun: item.tahun_survey, catatan: item.catatan }));
+                            const marker = L.marker([item.latitude, item.longitude], { icon })
+                                .bindPopup(markerPopup({
+                                    ...item,
+                                    jenis: j.nama_jenis,
+                                    tahun: item.tahun_survey,
+                                    catatan: item.catatan
+                                }));
+
+                            clusterGroup.addLayer(marker);
                         });
                     });
                 });
 
-                $('#fasilitas-groups .cb-fasilitas').each(function() {
+                // Tambahkan semua cluster fasilitas ke peta (default aktif)
+                $('#fasilitas-groups .cb-fasilitas').each(function () {
                     $(this).prop('checked', true);
                     let kode = this.dataset.kode;
                     let jenis = this.dataset.jenis;
@@ -664,14 +683,13 @@
 
                 // Checkbox event fasilitas
                 fasilitasContainer.querySelectorAll('.cb-fasilitas').forEach(cb => {
-                    cb.addEventListener('change', function() {
+                    cb.addEventListener('change', function () {
                         let kode = this.dataset.kode;
                         let jenis = this.dataset.jenis;
                         if (this.checked) map.addLayer(fasilitasGroups[kode][jenis]);
                         else map.removeLayer(fasilitasGroups[kode][jenis]);
                     });
                 });
-
 
                 // ======================
                 // === Data Rencana ===
@@ -683,16 +701,22 @@
                         rencanaContainer.appendChild(kodeContainer);
 
                         rencanaGroups[group.kode] = {};
+
                         group.jenis.forEach(j => {
-                            let jenisLayer = L.layerGroup();
-                            rencanaGroups[group.kode][j.nama_jenis] = jenisLayer;
+                            // Cluster per jenis rencana
+                            let clusterGroup = L.markerClusterGroup({
+                                disableClusteringAtZoom: 17,
+                                spiderfyOnMaxZoom: true,
+                                showCoverageOnHover: false,
+                            });
+                            rencanaGroups[group.kode][j.nama_jenis] = clusterGroup;
 
                             // Checkbox per jenis rencana
                             let checkbox = document.createElement('label');
                             checkbox.innerHTML = `<input type="checkbox" data-kode="${group.kode}" data-jenis="${j.nama_jenis}" class="cb-rencana" checked> ${j.nama_jenis}<br>`;
                             kodeContainer.appendChild(checkbox);
 
-                            // Marker per data
+                            // Tambahkan marker ke cluster group
                             j.data.forEach(item => {
                                 let icon;
                                 if (j.icon && j.icon.trim() !== "") {
@@ -711,14 +735,21 @@
                                     });
                                 }
 
-                                L.marker([item.latitude, item.longitude], { icon: icon })
-                                    .addTo(jenisLayer)
-                                    .bindPopup(markerPopup({ ...item, jenis: j.nama_jenis, tahun: item.tahun_survey, catatan: item.catatan }));
+                                const marker = L.marker([item.latitude, item.longitude], { icon })
+                                    .bindPopup(markerPopup({
+                                        ...item,
+                                        jenis: j.nama_jenis,
+                                        tahun: item.tahun_survey,
+                                        catatan: item.catatan
+                                    }));
+
+                                clusterGroup.addLayer(marker);
                             });
                         });
                     });
 
-                    $('#rencana-groups .cb-rencana').each(function() {
+                    // Tambahkan cluster ke peta (aktif default)
+                    $('#rencana-groups .cb-rencana').each(function () {
                         $(this).prop('checked', true);
                         let kode = this.dataset.kode;
                         let jenis = this.dataset.jenis;
@@ -729,7 +760,7 @@
 
                     // Checkbox event rencana
                     rencanaContainer.querySelectorAll('.cb-rencana').forEach(cb => {
-                        cb.addEventListener('change', function() {
+                        cb.addEventListener('change', function () {
                             let kode = this.dataset.kode;
                             let jenis = this.dataset.jenis;
                             if (this.checked) map.addLayer(rencanaGroups[kode][jenis]);
@@ -740,10 +771,11 @@
                     rencanaContainer.innerHTML = `<span class="text-muted">Tidak ada data rencana.</span>`;
                 }
 
-                // Gabungkan legend
+                // Tambahkan legend
                 addLegend(fasilitasData, rencanaData);
             },
             error: (err) => {
+                Swal.close();
                 console.error(err);
             }
         });

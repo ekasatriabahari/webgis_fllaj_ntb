@@ -51,13 +51,52 @@ class ImportFasilitasController extends BaseController
                 $rencana   = !empty($item['rencana']) ? filter_var($item['rencana'], FILTER_VALIDATE_BOOLEAN) : false;
 
                 // --- Hitung urutan kode otomatis ---
+                // if ($rencana) {
+                //     $count = $rencanaModel->like('kode_fasilitas', 'RNC-' . $prefix, 'after')->countAllResults();
+                //     $kode  = 'RNC-' . $prefix . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+                // } else {
+                //     $count = $fasilitasModel->like('kode_fasilitas', $prefix, 'after')->countAllResults();
+                //     $kode  = $prefix . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+                // }
+
+                // --- Hitung urutan kode otomatis (perbaikan) ---
                 if ($rencana) {
-                    $count = $rencanaModel->like('kode_fasilitas', 'RNC-' . $prefix, 'after')->countAllResults();
-                    $kode  = 'RNC-' . $prefix . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+                    $likePattern = 'RNC-' . $prefix; // contoh: RNC-RMB
+                    // ambil 1 record dengan suffix numeric terbesar (mengandalkan 4 digit suffix)
+                    $last = $rencanaModel
+                        ->like('kode_fasilitas', $likePattern, 'after')
+                        ->orderBy("CAST(RIGHT(kode_fasilitas, 4) AS UNSIGNED) DESC", false)
+                        ->limit(1)
+                        ->get()
+                        ->getRow();
+                    
+                    if ($last && isset($last->kode_fasilitas)) {
+                        $lastNum = (int) substr($last->kode_fasilitas, -4); // ambil 4 digit terakhir
+                        $nextNum = $lastNum + 1;
+                    } else {
+                        $nextNum = 1;
+                    }
+
+                    $kode = 'RNC-' . $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
                 } else {
-                    $count = $fasilitasModel->like('kode_fasilitas', $prefix, 'after')->countAllResults();
-                    $kode  = $prefix . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+                    $likePattern = $prefix; // contoh: RMB
+                    $last = $fasilitasModel
+                        ->like('kode_fasilitas', $likePattern, 'after')
+                        ->orderBy("CAST(RIGHT(kode_fasilitas, 4) AS UNSIGNED) DESC", false)
+                        ->limit(1)
+                        ->get()
+                        ->getRow();
+
+                    if ($last && isset($last->kode_fasilitas)) {
+                        $lastNum = (int) substr($last->kode_fasilitas, -4);
+                        $nextNum = $lastNum + 1;
+                    } else {
+                        $nextNum = 1;
+                    }
+
+                    $kode = $prefix . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
                 }
+
 
                 // --- Folder Upload ---
                 $targetDir = $rencana
